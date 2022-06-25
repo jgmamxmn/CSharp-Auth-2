@@ -1,4 +1,6 @@
-![image](https://user-images.githubusercontent.com/65511890/155548059-d8aed5b1-b576-4c1b-8370-8d0eb6b9141a.png)
+<p align="center">
+<img src="https://user-images.githubusercontent.com/65511890/155548059-d8aed5b1-b576-4c1b-8370-8d0eb6b9141a.png" width="50%"/>
+</p>
 
 # Auth
 
@@ -50,6 +52,24 @@ catch (Exception exc)
 }
 
 PDO.Disconnect();
+```
+
+In practice, you'll be required to explicitly pass around SESSION, SERVER, and COOKIE objects all the goshdarn time. These are available as fields in the Auth object: Auth.\_SESSION, Auth.\_SERVER, and Auth.\_COOKIE.
+
+If you want to modify these values when the Auth object is created, you can use the CallbackToInitializeEnvironment parameter of Auth's constructor. For example:
+
+```
+// ... initialize PDO and DB as above example ...
+
+var Auth = new Delight.Auth.Auth(DB,
+  CallbackToInitializeEnvironment: (_auth, shimCookie, shimSession, shimServer) =>
+  {
+    // Copy cookies from some other source
+    foreach(var ExistingCookie in CollectionOfExistingCookies)
+    {
+       shimCookie.set(ExistingCookie.name, ExistingCookie.value);
+    }
+  });
 ```
 
 ## License
