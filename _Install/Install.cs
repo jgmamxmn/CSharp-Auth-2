@@ -10,10 +10,10 @@ namespace Delight.Db
 	{
 		public static int InstallTables(Delight.Shim.PDO PDO)
 		{
-			PDO.beginTransaction();
+			//PDO.beginTransaction();
 			var statement = PDO.prepare(DelightIM_CS_Auth.Properties.Resources.InstallationSql);
 			int res = statement.executeNonQuery(new Dictionary<string, object>());
-			PDO.commit();
+			//PDO.commit();
 			return res;
 		}
 	}

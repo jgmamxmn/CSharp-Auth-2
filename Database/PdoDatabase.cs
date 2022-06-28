@@ -196,7 +196,9 @@ namespace Delight.Db
 			foreach (var kvp in insertMappings)
 			{
 				string placeholder = "@" + kvp.Key;
-				insertMappings2.Add(placeholder, kvp.Value);
+				insertMappings2.Add(placeholder, 
+					kvp.Value ?? DBNull.Value // C# null is not well received here - it's treated as if no value has been provided at all. Use DBNull.Value to indicate an intentional null value.
+					);
 				valuePlaceholders.Add(placeholder);
 			}
 
