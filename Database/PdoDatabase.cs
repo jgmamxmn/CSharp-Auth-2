@@ -18,7 +18,6 @@ namespace Delight.Db
 
 	public class BindValues : Dictionary<string,object>
 	{
-
 		public string Serialize()
 		{
 			return string.Join
@@ -27,9 +26,26 @@ namespace Delight.Db
 				this.Select(KVP => $"{KVP.Key} = {KVP.Value.ToString()}")
 			);
 		}
-
+		/*public BindValuesValidated Validate()
+		{
+			var ret = new BindValuesValidated();
+			foreach(var kvp in this)
+			{
+				ret.Add(kvp.Key, valid
+			}
+		}*/
 	}
-
+	/*public class BindValuesValidated : Dictionary<string,object>
+	{
+		public string Serialize()
+		{
+			return string.Join
+			(
+				"; ",
+				this.Select(KVP => $"{KVP.Key} = {KVP.Value.ToString()}")
+			);
+		}
+	}*/
 
 	/** Database access using PHP"s built-in PDO */
 	public sealed class PdoDatabase : Database 
@@ -40,7 +56,7 @@ namespace Delight.Db
 		/** @var array|null the new connection attributes to apply during normalization */
 		private Dictionary<ePDO, object> attributes;
 		/** @var PDO|null the connection that this public class operates on (may be lazily loaded) */
-		private Shim.PDO pdo;
+		public Shim.PDO pdo { get; private set; }
 		/** @var PdoDsn|null the PDO-specific DSN that may be used to establish the connection */
 		private PdoDsn dsn;
 		/** @var string|null the name of the driver that is used for the current connection (may be lazily loaded) */
@@ -197,7 +213,7 @@ namespace Delight.Db
 			{
 				string placeholder = "@" + kvp.Key;
 				insertMappings2.Add(placeholder, 
-					kvp.Value ?? DBNull.Value // C# null is not well received here - it's treated as if no value has been provided at all. Use DBNull.Value to indicate an intentional null value.
+					kvp.Value
 					);
 				valuePlaceholders.Add(placeholder);
 			}

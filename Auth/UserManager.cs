@@ -24,7 +24,7 @@ namespace Delight.Auth
 
 
 		/** @var PdoDatabase the database connection to operate on */
-		protected PdoDatabase db;
+		public PdoDatabase db { get; protected set; }
 		/** @var string|null the schema name for all database tables used by this component */
 		protected string dbSchema;
 		/** @var string the prefix for the names of all database tables used by this component */

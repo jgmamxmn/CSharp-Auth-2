@@ -134,10 +134,25 @@ namespace Delight.Shim
 			Command = new NpgsqlCommand(queryString, PDO.Connection);
 			//Command.Prepare();
 		}
+
+		private static object MakeValidObject(object input)
+		{
+			// C# null is not well received here - it's treated as if no value has been provided at all. Use DBNull.Value to indicate an intentional null value.
+			if (input is null)
+				return DBNull.Value;
+
+			if (input.GetType().IsEnum)
+				return (int)input;
+
+			return input;
+
+		}
+
+
 		private void _prepParams(Dictionary<string, object> queryParams)
 		{
 			Command.Parameters.Clear();
-			Command.Parameters.AddRange(queryParams.Select(X => new NpgsqlParameter(X.Key, X.Value)).ToArray());
+			Command.Parameters.AddRange(queryParams.Select(X => new NpgsqlParameter(X.Key, MakeValidObject(X.Value))).ToArray());
 		}
 		private void _ensureFree()
 		{
