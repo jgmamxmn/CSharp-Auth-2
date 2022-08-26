@@ -36,9 +36,23 @@ namespace Delight.Auth
 	public class TokenExpiredException : AuthException { }
 	public class TooManyRequestsException : AuthException 
 	{
+		public int WaitingTimeSeconds = -1;
+		public int? UserId = null, OpenRequests = null, MaxOpenRequests = null;
+		public string BucketKey, BucketCriteria;
 		public TooManyRequestsException() : base() { }
 		public TooManyRequestsException(string m) : base(m) { }
-		public TooManyRequestsException(string m, int i) : base(m) { }
+		public TooManyRequestsException(string m, int waitingTimeSeconds,
+			int? userId=null, int? openRequests=null, int? maxOpenRequests=null, 
+			string bucketKey=null, string bucketCriteria=null) 
+			: base(m)
+		{
+			WaitingTimeSeconds = waitingTimeSeconds;
+			UserId = userId;
+			OpenRequests = openRequests;
+			MaxOpenRequests = maxOpenRequests;
+			BucketKey = bucketKey;
+			BucketCriteria = bucketCriteria;
+		}
 	}
 	public class UnknownIdException : AuthException { }
 	public class UnknownUsernameException : AuthException { }

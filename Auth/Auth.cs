@@ -53,14 +53,14 @@ namespace Delight.Auth
 		/// <param name="shimCookie">(optional) an existing cookie emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
 		/// <param name="shimSession">(optional) an existing session emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
 		/// <param name="shimServer">(optional) an existing server environment emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
-		public Auth(PdoDatabase _databaseConnection, string _ipAddress = null, string _dbTablePrefix = null, bool? _throttling = null,
+		public Auth(PdoDatabase _databaseConnection, string _ipAddress, string _dbTablePrefix = null, bool? _throttling = null,
 			int? _sessionResyncInterval = null, string _dbSchema = null,
 			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment=null,
 			Shim._COOKIE shimCookie = null,	Shim._SESSION shimSession = null,Shim._SERVER shimServer = null)
 			: base(_databaseConnection, _dbTablePrefix, _dbSchema,
 				  shimCookie ?? new Shim._COOKIE(),
 				  shimSession ?? new Shim._SESSION(),
-				  shimServer ?? new Shim._SERVER())
+				  shimServer ?? new Shim._SERVER(_ipAddress))
 		{
 			if (CallbackToInitializeEnvironment != null)
 				CallbackToInitializeEnvironment(this, this._COOKIE, this._SESSION, this._SERVER);
@@ -1075,7 +1075,7 @@ namespace Delight.Auth
 				this.createPasswordResetRequest(userData.id, requestExpiresAfter, callback);
 			}
 			else {
-				throw new TooManyRequestsException("", requestExpiresAfter);
+				throw new TooManyRequestsException("", requestExpiresAfter, userData.id, openRequests, maxOpenRequests);
 			}
 		}
 
@@ -1940,7 +1940,7 @@ namespace Delight.Auth
 				var tokensMissing = ((float)cost - Shim.MasterCaster.GetFloat(bucket["tokens"]));
 				var estimatedWaitingTimeSeconds = ceil(((double)tokensMissing) / bandwidthPerSecond);
 
-				throw new TooManyRequestsException("", estimatedWaitingTimeSeconds);
+				throw new TooManyRequestsException("", estimatedWaitingTimeSeconds, null, null, null, key, string.Join("; ", criteria));
 			}
 		}
 
