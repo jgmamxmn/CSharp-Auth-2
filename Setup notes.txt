@@ -1,0 +1,8 @@
+The (release version of the) package will automatically be pushed to GitHub private NuGet source on build.
+For this to work, the GitHub API key should be stated in a global environmental variable called
+	GITHUB_NUGET_KEY
+
+e.g. 
+	GITHUB_NUGET_KEY=ghp_ABCDEFghijklm123456
+
+The API key must have permissions to create and install packages. It is not specific to a repo.
