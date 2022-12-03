@@ -55,13 +55,21 @@ namespace Delight.Auth
 		/// <param name="shimServer">(optional) an existing server environment emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
 		public Auth(PdoDatabase _databaseConnection, string _ipAddress, string _dbTablePrefix = null, bool? _throttling = null,
 			int? _sessionResyncInterval = null, string _dbSchema = null,
-			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment=null,
-			Shim._COOKIE shimCookie = null,	Shim._SESSION shimSession = null,Shim._SERVER shimServer = null)
+			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment = null,
+			Shim._COOKIE shimCookie = null, Shim._SESSION shimSession = null, Shim._SERVER shimServer = null)
 			: base(_databaseConnection, _dbTablePrefix, _dbSchema,
 				  shimCookie ?? new Shim._COOKIE(),
 				  shimSession ?? new Shim._SESSION(),
 				  shimServer ?? new Shim._SERVER(_ipAddress))
 		{
+			DoConstructor(_databaseConnection, _ipAddress, _dbTablePrefix, _throttling, _sessionResyncInterval, _dbSchema, CallbackToInitializeEnvironment, shimCookie, shimSession, shimServer);
+		}
+
+		private void DoConstructor(PdoDatabase _databaseConnection, string _ipAddress, string _dbTablePrefix = null, bool? _throttling = null,
+			int? _sessionResyncInterval = null, string _dbSchema = null,
+			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment = null,
+			Shim._COOKIE shimCookie = null, Shim._SESSION shimSession = null, Shim._SERVER shimServer = null)
+		{ 
 			if (CallbackToInitializeEnvironment != null)
 				CallbackToInitializeEnvironment(this, this._COOKIE, this._SESSION, this._SERVER);
 

@@ -7,6 +7,12 @@
     <AssemblyOriginatorKeyFile>MxmnKeyFile2.pfx</AssemblyOriginatorKeyFile>
 	  <RepositoryUrl>https://github.com/jgmamxmn/CSharp-Auth-2</RepositoryUrl>
 	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <Title>CSharp-Auth</Title>
+	  <Authors>Maximon Ltd.</Authors>
+	  <Company>Maximon Ltd.</Company>
+	  <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
+	  <Description>An authentication library based on Delight.IM's PHP-Auth</Description>
+	  <Copyright>(C) Copyright Maximon Ltd., Dec 2022. Distributed under MIT license.</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
