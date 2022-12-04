@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -13,6 +13,7 @@
 	  <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
 	  <Description>An authentication library based on Delight.IM's PHP-Auth</Description>
 	  <Copyright>(C) Copyright Maximon Ltd., Dec 2022. Distributed under MIT license.</Copyright>
+	  <Version>1.0.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,8 +36,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="dotnet nuget push &quot;bin\Release\CSharp-Auth.1.0.0.nupkg&quot; --source &quot;github&quot; -k $env:GITHUB_NUGET_KEY" />
+  <Target Name="CopyPackage" AfterTargets="Pack">
+    <Exec Command="$(SolutionDir)\NuGetPushTool\bin\Release\net6.0\NuGetPushTool.exe $(Configuration) $(ProjectDir)" />
   </Target>
 
 

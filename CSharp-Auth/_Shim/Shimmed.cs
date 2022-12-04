@@ -392,7 +392,7 @@ namespace Delight.Shim
 			return new List<debug_backtrace_param>();
 		}
 
-		protected enum eErrorLevel
+		public enum eErrorLevel
 		{
 			E_USER_NOTICE,
 			E_USER_WARNING,
@@ -467,7 +467,6 @@ namespace Delight.Shim
 				// N/A
 			}
 		}
-
 		public string session_name(string newSessionName = null)
 		{
 			if (newSessionName == null)

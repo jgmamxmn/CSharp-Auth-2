@@ -28,7 +28,7 @@ namespace Delight.Shim
 				Dict.Add(key, value);
 			}
 		}
-		public void unset(KeyType key)
+		public virtual void unset(KeyType key)
 		{
 			if (Dict.ContainsKey(key))
 				Dict.Remove(key);
@@ -41,7 +41,7 @@ namespace Delight.Shim
 		{
 		}
 		public Dictionary<string, Delight.Cookie.Cookie> GetLiveCollection() => Dict;
-		public void Set(string key, Delight.Cookie.Cookie cookieEntry)
+		public virtual void Set(string key, Delight.Cookie.Cookie cookieEntry)
 		{
 			if (Dict.ContainsKey(key))
 				Dict.Remove(key);

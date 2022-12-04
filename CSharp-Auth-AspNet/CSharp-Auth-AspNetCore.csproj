@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>CSharp_Auth_AspNet</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>CSharp-Auth-AspNetCore</Title>
+    <Authors>Maximon Ltd.</Authors>
+    <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CSharp-Auth" Version="1.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+
+	<Target Name="CopyPackage" AfterTargets="Pack">
+		<Exec Command="$(SolutionDir)\NuGetPushTool\bin\Release\net6.0\NuGetPushTool.exe $(Configuration) $(ProjectDir)" />
+	</Target>
+
+</Project>
