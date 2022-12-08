@@ -10,36 +10,36 @@ namespace Delight.Shim
 	/// <summary>
 	/// Includes various implementations of PHP functions etc.
 	/// </summary>
-	public abstract class Shimmed_PHPOnly
+	public static class Php
 	{
-		protected const string __NAMESPACE__ = "Delight";
-		protected const int PHP_INT_MAX = int.MaxValue; //~(int)0;
+		public const string __NAMESPACE__ = "Delight";
+		public const int PHP_INT_MAX = int.MaxValue; //~(int)0;
 
-		protected enum PASSWORD_ALGO
+		public enum PASSWORD_ALGO
 		{
 			PASSWORD_DEFAULT
 		}
-		protected string password_hash(string password, PASSWORD_ALGO algoType)
+		public static string password_hash(string password, PASSWORD_ALGO algoType)
 		{
 			if (algoType != PASSWORD_ALGO.PASSWORD_DEFAULT) return null;
 			string salt = BCrypt.Net.BCrypt.GenerateSalt(10);
 			// Tested and works!
 			return BCrypt.Net.BCrypt.HashPassword(password ?? string.Empty, salt);
 		}
-		protected bool password_verify(string password, string hash)
+		public static bool password_verify(string password, string hash)
 		{
 			return !string.IsNullOrEmpty(hash) && BCrypt.Net.BCrypt.Verify(password, hash);
 		}
-		protected bool password_needs_rehash(string hash)
+		public static bool password_needs_rehash(string hash)
 		{
 			return true;
 		}
-		protected enum HASH_ALGO
+		public enum HASH_ALGO
 		{
 			sha256,
 			md5
 		}
-		protected static string hash(HASH_ALGO algo, string text, bool binary=false)
+		public static string hash(HASH_ALGO algo, string text, bool binary=false)
 		{
 			byte[] ret = null;
 			switch(algo)
@@ -65,11 +65,11 @@ namespace Delight.Shim
 			else
 				return Convert.ToHexString(ret).ToLower();
 		}
-		protected static string md5(string text, bool binary = false) => hash(HASH_ALGO.md5, text, binary);
+		public static string md5(string text, bool binary = false) => hash(HASH_ALGO.md5, text, binary);
 
-		protected static string urldecode(string str) => System.Web.HttpUtility.UrlDecode(str);
-		protected static string urlencode(string str) => System.Web.HttpUtility.UrlEncode(str);
-		protected static bool empty(object o)
+		public static string urldecode(string str) => System.Web.HttpUtility.UrlDecode(str);
+		public static string urlencode(string str) => System.Web.HttpUtility.UrlEncode(str);
+		public static bool empty(object o)
 		{
 			if (o is string s)
 				return string.IsNullOrEmpty(s);
@@ -78,9 +78,9 @@ namespace Delight.Shim
 			else
 				return true;
 		}
-		protected static bool is_null(object o) => (o is null);
-		protected static bool is_numeric(int i) => true;
-		protected static bool is_bool(int i) => false;
+		public static bool is_null(object o) => (o is null);
+		public static bool is_numeric(int i) => true;
+		public static bool is_bool(int i) => false;
 		public static bool isset(object o)
 		{
 			if (o is null || o==null)
@@ -91,15 +91,17 @@ namespace Delight.Shim
 		}
 		public static bool isset<ValType>(Dictionary<string, ValType> enumerable, string key) => enumerable.ContainsKey(key);
 		public static bool isset<ValType>(BasicDictionaryWrapped<string, ValType> enumerable, string key) => enumerable.Dict.ContainsKey(key);
-		protected static bool isset(Shim._SESSION s) => true;
-		protected static bool is_callable(object o) => (o != null);
-		protected static bool empty<T>(IEnumerable<T> en) => (!en?.Any()) ?? true;
-		protected static int count<T>(IEnumerable<T> en) => en?.Count() ?? 0;
-		protected static string trim(string s) => s?.Trim();
-		protected static string trim(string s, string trimChars) => s?.Trim(trimChars.ToArray());
-		protected static int strlen(string s) => s?.Length ?? 0;
+		public interface Issetable { bool isset(string key); }
+		public static bool isset(Issetable enumerable, string key) => enumerable.isset(key);
+		public static bool isset(Shim._SESSION s) => true;
+		public static bool is_callable(object o) => (o != null);
+		public static bool empty<T>(IEnumerable<T> en) => (!en?.Any()) ?? true;
+		public static int count<T>(IEnumerable<T> en) => en?.Count() ?? 0;
+		public static string trim(string s) => s?.Trim();
+		public static string trim(string s, string trimChars) => s?.Trim(trimChars.ToArray());
+		public static int strlen(string s) => s?.Length ?? 0;
 
-		/*protected static bool preg_match(string regex, string haystack, bool bIgnoreCase, out System.Text.RegularExpressions.MatchCollection matches)
+		/*public static bool preg_match(string regex, string haystack, bool bIgnoreCase, out System.Text.RegularExpressions.MatchCollection matches)
 		{
 			var m = System.Text.RegularExpressions.Regex.Matches(haystack, regex,
 				(bIgnoreCase ? System.Text.RegularExpressions.RegexOptions.IgnoreCase : System.Text.RegularExpressions.RegexOptions.None));
@@ -110,52 +112,52 @@ namespace Delight.Shim
 			matches = m;
 			return matches.Any();
 		}*/
-		protected static void unset<T1, T2>(Dictionary<T1, T2> dict, T1 key) => dict.Remove(key);
-		protected static void unset<T1, T2>(BasicDictionaryWrapped<T1, T2> dict, T1 key) => dict.unset(key);
+		public static void unset<T1, T2>(Dictionary<T1, T2> dict, T1 key) => dict.Remove(key);
+		public static void unset<T1, T2>(BasicDictionaryWrapped<T1, T2> dict, T1 key) => dict.unset(key);
 
-		protected static void ignore_user_abort(bool b) { } // NADA
-		protected static int floor(int i) => i;
-		protected static int floor(float f) => (int)Math.Floor(f);
-		protected static int floor(double d) => (int)Math.Floor(d);
-		protected static int ceil(float f) => (int)Math.Ceiling(f);
-		protected static int ceil(double f) => (int)Math.Ceiling(f);
-		protected static int max(int a, int b) => Math.Max(a, b);
-		protected static float max(float a, float b) => Math.Max(a, b);
-		protected static int min(int a, int b) => Math.Min(a, b);
-		protected static float min(float a, float b) => Math.Min(a, b);
-		protected static float fmin(double a, double b) => (float)Math.Min(a, b);
-		protected static int strcasecmp(string a, string b) => string.Compare(a, b, true);
-		protected static int strpos(string haystack, string needle, int offset = 0, StringComparison comp= StringComparison.InvariantCulture)
+		public static void ignore_user_abort(bool b) { } // NADA
+		public static int floor(int i) => i;
+		public static int floor(float f) => (int)Math.Floor(f);
+		public static int floor(double d) => (int)Math.Floor(d);
+		public static int ceil(float f) => (int)Math.Ceiling(f);
+		public static int ceil(double f) => (int)Math.Ceiling(f);
+		public static int max(int a, int b) => Math.Max(a, b);
+		public static float max(float a, float b) => Math.Max(a, b);
+		public static int min(int a, int b) => Math.Min(a, b);
+		public static float min(float a, float b) => Math.Min(a, b);
+		public static float fmin(double a, double b) => (float)Math.Min(a, b);
+		public static int strcasecmp(string a, string b) => string.Compare(a, b, true);
+		public static int strpos(string haystack, string needle, int offset = 0, StringComparison comp= StringComparison.InvariantCulture)
 		{
 			if (string.IsNullOrEmpty(haystack))
 				return -1;
 			else
 				return haystack.IndexOf(needle, offset, comp);
 		}
-		protected static int strrpos(string haystack, string needle, int offset = 0, StringComparison comp = StringComparison.InvariantCulture)
+		public static int strrpos(string haystack, string needle, int offset = 0, StringComparison comp = StringComparison.InvariantCulture)
 		{
 			if (string.IsNullOrEmpty(haystack))
 				return -1;
 			else
 				return haystack.LastIndexOf(needle, offset, comp);
 		}
-		protected static int stripos(string haystack, string needle, int offset = 0)
+		public static int stripos(string haystack, string needle, int offset = 0)
 			=> strpos(haystack, needle, offset, StringComparison.InvariantCultureIgnoreCase);
-		protected static string strtr(string haystack, string from, string to)
+		public static string strtr(string haystack, string from, string to)
 		{
 			if (string.IsNullOrEmpty(haystack))
 				return haystack;
 			else
 				return haystack.Replace(from, to);
 		}
-		protected static string rtrim(string haystack, string chars = " \r\n\t\0\v")
+		public static string rtrim(string haystack, string chars = " \r\n\t\0\v")
 		{
 			if (string.IsNullOrEmpty(haystack))
 				return haystack;
 			else
 				return haystack.TrimEnd(chars.ToArray());
 		}
-		protected static string substr(string haystack, int offset, int? length = null)
+		public static string substr(string haystack, int offset, int? length = null)
 		{
 			if (string.IsNullOrEmpty(haystack))
 				return haystack;
@@ -178,13 +180,13 @@ namespace Delight.Shim
 				}
 			}
 		}
-		protected static string str_replace(in string search, in string replace, in string subject)
+		public static string str_replace(in string search, in string replace, in string subject)
 		{
 			if (string.IsNullOrEmpty(subject)) return subject;
 			return subject.Replace(search, replace);
 		}
-		protected static string implode(string connector, IEnumerable<string> parts) => string.Join(connector, parts);
-		protected static string[] explode(string separator, string str, int? limit = null)
+		public static string implode(string connector, IEnumerable<string> parts) => string.Join(connector, parts);
+		public static string[] explode(string separator, string str, int? limit = null)
 		{
 			if (string.IsNullOrEmpty(str))
 				return new string[] { str };
@@ -194,7 +196,7 @@ namespace Delight.Shim
 				return str.Split(separator);
 		}
 
-		protected static byte[] openssl_random_pseudo_bytes(int len)
+		public static byte[] openssl_random_pseudo_bytes(int len)
 		{
 			var ret = new Span<byte>(new byte[len]);
 			System.Security.Cryptography.RandomNumberGenerator.Fill(ret);
@@ -202,23 +204,23 @@ namespace Delight.Shim
 		}
 
 		private static DateTime epoch = new DateTime(1970, 1, 1);
-		protected static int time()
+		public static int time()
 		{
 			return (int)(DateTime.Now - epoch).TotalSeconds;
 		}
-		protected static double microtime(bool as_float)
+		public static double microtime(bool as_float)
 		{
 			return ((DateTime.Now - epoch).TotalMilliseconds)*1000.0; // Not precise, but it's what we have
 		}
 
 
 
-		protected enum FILTER
+		public enum FILTER
 		{
 			FILTER_VALIDATE_EMAIL,
 			FILTER_VALIDATE_IP
 		}
-		protected static bool filter_var(string inp, FILTER filter)
+		public static bool filter_var(string inp, FILTER filter)
 		{
 			switch(filter)
 			{
@@ -250,43 +252,43 @@ namespace Delight.Shim
 			}
 		}
 
-		protected enum ARRAY_FILTER_USE_VALUE { x }
-		protected enum ARRAY_FILTER_USE_KEY { x }
-		protected enum ARRAY_FILTER_USE_BOTH { x }
+		public enum ARRAY_FILTER_USE_VALUE { x }
+		public enum ARRAY_FILTER_USE_KEY { x }
+		public enum ARRAY_FILTER_USE_BOTH { x }
 
-		protected static Dictionary<KT, VT> array_filter<KT, VT>(Dictionary<KT, VT> inp, Predicate<VT> test, ARRAY_FILTER_USE_VALUE _ = ARRAY_FILTER_USE_VALUE.x)
+		public static Dictionary<KT, VT> array_filter<KT, VT>(Dictionary<KT, VT> inp, Predicate<VT> test, ARRAY_FILTER_USE_VALUE _ = ARRAY_FILTER_USE_VALUE.x)
 		{
 			var ret = new Dictionary<KT, VT>();
 			foreach (var X in inp.Where(KVP => test(KVP.Value)))
 				ret.Add(X.Key, X.Value);
 			return ret;
 		}
-		protected static Dictionary<KT,VT> array_filter<KT,VT>(Dictionary<KT,VT> inp, Predicate<KT> test, ARRAY_FILTER_USE_KEY _)
+		public static Dictionary<KT,VT> array_filter<KT,VT>(Dictionary<KT,VT> inp, Predicate<KT> test, ARRAY_FILTER_USE_KEY _)
 		{
 			var ret = new Dictionary<KT, VT>();
 			foreach (var X in inp.Where(KVP => test(KVP.Key)))
 				ret.Add(X.Key, X.Value);
 			return ret;
 		}
-		protected static Dictionary<KT, VT> array_filter<KT, VT>(Dictionary<KT, VT> inp, Func<VT, KT, bool> test, ARRAY_FILTER_USE_BOTH _)
+		public static Dictionary<KT, VT> array_filter<KT, VT>(Dictionary<KT, VT> inp, Func<VT, KT, bool> test, ARRAY_FILTER_USE_BOTH _)
 		{
 			var ret = new Dictionary<KT, VT>();
 			foreach (var X in inp.Where(KVP => test(KVP.Value, KVP.Key)))
 				ret.Add(X.Key, X.Value);
 			return ret;
 		}
-		protected static List<KT> array_keys<KT, VT>(Dictionary<KT, VT> inp) => inp.Keys.ToList();
-		protected static List<VT> array_values<KT, VT>(Dictionary<KT, VT> inp) => inp.Values.ToList();
-		protected static List<T> array_fill<T>(int start_index_IGNORED, int count, T val)
+		public static List<KT> array_keys<KT, VT>(Dictionary<KT, VT> inp) => inp.Keys.ToList();
+		public static List<VT> array_values<KT, VT>(Dictionary<KT, VT> inp) => inp.Values.ToList();
+		public static List<T> array_fill<T>(int start_index_IGNORED, int count, T val)
 		{
 			var ret = new List<T>();
 			for (int i = 0; i < count; ++i)
 				ret.Add(val);
 			return ret;
 		}
-		protected static List<TOut> array_map<TIn, TOut>(Func<TIn, TOut> callback, IEnumerable<TIn> array)
+		public static List<TOut> array_map<TIn, TOut>(Func<TIn, TOut> callback, IEnumerable<TIn> array)
 			=> array.Select(callback).ToList();
-		protected static List<T> array_shift<T>(IEnumerable<T> array)
+		public static List<T> array_shift<T>(IEnumerable<T> array)
 		{
 			var ret = array.ToList();
 			ret.RemoveAt(0);
@@ -359,7 +361,7 @@ namespace Delight.Shim
 			// Full Date/Time	---	---
 			{ 'U', (dt)=>(dt-epoch).TotalSeconds.ToString() } // Seconds since the Unix Epoch (January 1 1970 00:00:00 GMT)	See also time()
 		};
-		protected static string gmdate(string phpFmt, int unixTimestamp)
+		public static string gmdate(string phpFmt, int unixTimestamp)
 		{
 			var dt = epoch.AddSeconds(unixTimestamp);
 			var dotnetFmt = new StringBuilder();
@@ -375,7 +377,7 @@ namespace Delight.Shim
 			return dt.ToString(dotnetFmt.ToString());
 		}
 
-		protected enum debug_backtrace_opts
+		public enum debug_backtrace_opts
 		{
 			DEBUG_BACKTRACE_PROVIDE_OBJECT, DEBUG_BACKTRACE_IGNORE_ARGS
 		}
@@ -386,7 +388,7 @@ namespace Delight.Shim
 			public object @object;
 			public List<object> args;
 		}
-		protected static List<debug_backtrace_param> debug_backtrace(debug_backtrace_opts opts_IGNORED= debug_backtrace_opts.DEBUG_BACKTRACE_PROVIDE_OBJECT, int limit_IGNORED = 0)
+		public static List<debug_backtrace_param> debug_backtrace(debug_backtrace_opts opts_IGNORED= debug_backtrace_opts.DEBUG_BACKTRACE_PROVIDE_OBJECT, int limit_IGNORED = 0)
 		{
 			// TODO not implemented
 			return new List<debug_backtrace_param>();
@@ -398,7 +400,7 @@ namespace Delight.Shim
 			E_USER_WARNING,
 			E_USER_ERROR
 		}
-		protected static void trigger_error(string message, eErrorLevel error_level)
+		public static void trigger_error(string message, eErrorLevel error_level)
 		{
 			var map = new Dictionary<eErrorLevel, string>
 			{
@@ -417,12 +419,12 @@ namespace Delight.Shim
 	/// <summary>
 	/// Includes implementation of PHP functions AND ALSO a meta-environment capable of emulating cookies, server, and session info
 	/// </summary>
-	public abstract class Shimmed_Full : Shimmed_PHPOnly
+	public class PhpInstance
 	{
 		public Shim._COOKIE _COOKIE;
 		public Shim._SESSION _SESSION;
 		public Shim._SERVER _SERVER;
-		protected Shimmed_Full(_COOKIE cookieShim, _SESSION sessionShim, _SERVER serverShim)
+		public PhpInstance(_COOKIE cookieShim, _SESSION sessionShim, _SERVER serverShim)
 		{
 			_COOKIE = cookieShim;
 			_SESSION = sessionShim;
@@ -451,7 +453,7 @@ namespace Delight.Shim
 		public List<string> headers_list()
 		{
 			var ret = new List<string>();
-			foreach (var c in _COOKIE.Dict)
+			foreach (var c in _COOKIE.GetLiveCollection())
 				ret.Add(c.Value._ToString());
 			return ret;
 		}
@@ -460,7 +462,7 @@ namespace Delight.Shim
 			if (name == "Set-Cookie")
 			{
 				Console.WriteLine("Clearing all cookies?");
-				_COOKIE.Dict.Clear();
+				_COOKIE.Clear();
 			}
 			else
 			{

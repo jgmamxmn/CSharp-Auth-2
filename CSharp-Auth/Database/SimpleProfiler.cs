@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Delight.Auth;
+using Delight.Shim;
 
 namespace Delight.Db
 {
@@ -34,7 +35,7 @@ namespace Delight.Db
 
 		override public void beginMeasurement() 
 		{
-			this.currentMeasurementStartTime = microtime(true) * 1000;
+			this.currentMeasurementStartTime = Php.microtime(true) * 1000;
 		}
 
 		override public void endMeasurement(string sql, BindValues boundValues = null, int? discardMostRecentTraceEntries = null) {
@@ -42,15 +43,15 @@ namespace Delight.Db
 			discardMostRecentTraceEntries = discardMostRecentTraceEntries ?? 0;
 
 			// get the trace at this point of the program execution
-			var trace = debug_backtrace( debug_backtrace_opts.DEBUG_BACKTRACE_IGNORE_ARGS, this.maxTraceLength);
+			var trace = Php.debug_backtrace(Php.debug_backtrace_opts.DEBUG_BACKTRACE_IGNORE_ARGS, this.maxTraceLength);
 
 			// discard as many of the most recent entries as desired (but always discard at least the current method)
 			for (var i = 0; i < discardMostRecentTraceEntries + 1; i++) {
-				array_shift(trace);
+				Php.array_shift(trace);
 			}
 
 			// calculate the duration in milliseconds
-			var duration = (microtime(true) * 1000) - this.currentMeasurementStartTime ?? 0;
+			var duration = (Php.microtime(true) * 1000) - this.currentMeasurementStartTime ?? 0;
 
 			// and finally record the measurement
 			this.measurements.Add(new SimpleMeasurement(
@@ -62,7 +63,7 @@ namespace Delight.Db
 		}
 
 		override public int getCount() {
-			return count(this.measurements);
+			return Php.count(this.measurements);
 		}
 
 		override public Measurement getMeasurement(int index) {

@@ -1,4 +1,5 @@
 using Delight.Auth;
+using Delight.Shim;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -201,7 +202,7 @@ namespace Delight.Db
 		override public int insert(string _tableName, Dictionary<string,object> insertMappings, string returnColumnName, out object returnedColumn)
 		{
 			// if no values have been provided that could be inserted
-			if (empty(insertMappings)) {
+			if (Php.empty(insertMappings)) {
 				// we cannot perform an insert here
 				throw new EmptyValueListError();
 			}
@@ -220,16 +221,16 @@ namespace Delight.Db
 
 			// escape the table name
 			_tableName = this.quoteTableName(_tableName);
-			// get the column names
-			var columnNames = array_keys(insertMappings);
+			// get the column Php.names
+			var columnNames = Php.array_keys(insertMappings);
 			// escape the column names
-			columnNames = array_map(this.quoteIdentifier, columnNames);
+			columnNames = Php.array_map(this.quoteIdentifier, columnNames);
 			// build the column list
-			var columnList = implode(", ", columnNames);
+			var columnList = Php.implode(", ", columnNames);
 			// prepare the values (which are placeholders only)
 			//var values = array_fill(0, count(insertMappings), "?");
 			// build the value list
-			var placeholderList = implode(", ", valuePlaceholders);
+			var placeholderList = Php.implode(", ", valuePlaceholders);
 			// and finally build the full statement (still using placeholders)
 			var statement = new StringBuilder().Append("INSERT INTO ").Append(_tableName)
 				.Append(" (").Append(columnList).Append(") VALUES (").Append(placeholderList).Append(")");
@@ -250,13 +251,13 @@ namespace Delight.Db
 		public override int update(string tableName, Dictionary<string, object> updateMappings, Dictionary<string, object> whereMappings)
 		{
 			// if no values have been provided that we could update to
-			if (empty(updateMappings)) {
+			if (Php.empty(updateMappings)) {
 				// we cannot perform an update here
 				throw new EmptyValueListError();
 			}
 
 			// if no values have been provided that we could filter by (which is possible but dangerous)
-			if (empty(whereMappings)) {
+			if (Php.empty(whereMappings)) {
 				// we should not perform an update here
 				throw new EmptyWhereClauseError();
 			}
@@ -306,7 +307,7 @@ namespace Delight.Db
 			}
 
 			// build the full statement (still using placeholders)
-			var statement = "UPDATE " + tableName + " SET " + implode(", ", setDirectives) + " WHERE " + implode(" AND ", wherePredicates) + ";";
+			var statement = "UPDATE " + tableName + " SET " + Php.implode(", ", setDirectives) + " WHERE " + Php.implode(" AND ", wherePredicates) + ";";
 
 			// execute the (parameterized) statement and supply the values to be bound to it
 			return this.exec(Database.ExecType.NonQuery, statement, bindValues);
@@ -315,7 +316,7 @@ namespace Delight.Db
 		public override int delete(string tableName, Dictionary<string, object> whereMappings)
 		{
 			// if no values have been provided that we could filter by (which is possible but dangerous)
-			if (empty(whereMappings)) {
+			if (Php.empty(whereMappings)) {
 				// we should not perform a deletion here
 				throw new EmptyWhereClauseError();
 			}
@@ -344,7 +345,7 @@ namespace Delight.Db
 			}
 
 			// build the full statement (still using placeholders)
-			var statement = "DELETE FROM " + tableName + " WHERE " + implode(" AND ", wherePredicates) + ";";
+			var statement = "DELETE FROM " + tableName + " WHERE " + Php.implode(" AND ", wherePredicates) + ";";
 
 			// execute the (parameterized) statement and supply the values to be bound to it
 			return this.exec(ExecType.NonQuery, statement, bindValues);
@@ -368,7 +369,7 @@ namespace Delight.Db
 			}
 
 			// if a performance profiler has been defined
-			if (isset(this.profiler)) {
+			if (Php.isset(this.profiler)) {
 				this.profiler.beginMeasurement();
 			}
 
@@ -398,7 +399,7 @@ namespace Delight.Db
 			//} catch (Exception e) { returnedColumn = null; ErrorHandler.rethrow(e); }
 
 			// if a performance profiler has been defined
-			if (isset(this.profiler)) {
+			if (Php.isset(this.profiler)) {
 				this.profiler.endMeasurement(statement, bindValues);
 			}
 
@@ -548,12 +549,12 @@ namespace Delight.Db
 				ch = "\"";
 			}
 
-			return ch + str_replace(ch, ch + ch, identifier) + ch;
+			return ch + Php.str_replace(ch, ch + ch, identifier) + ch;
 		}
 
 		public override string quoteTableName(string[] _tableName)
 		{
-			return implode("+", array_map(this.quoteIdentifier, _tableName));
+			return Php.implode("+", Php.array_map(this.quoteIdentifier, _tableName));
 		}
 		public override string quoteTableName(string _tableName)
 		{ 
@@ -640,9 +641,9 @@ namespace Delight.Db
 		 */
 		private void configureConnection(Dictionary<ePDO,object> newAttributes = null, Dictionary<ePDO,object> oldAttributes = null) {
 			// if a connection is available
-			if (isset(this.pdo)) {
+			if (Php.isset(this.pdo)) {
 				// if there are attributes that need to be applied
-				if (isset(newAttributes)) {
+				if (Php.isset(newAttributes)) {
 					// get the keys and values of the attributes to apply
 					foreach (var kvp in newAttributes) {
 
@@ -651,7 +652,7 @@ namespace Delight.Db
 						object oldValue = null;
 
 						// if the old state of the connection must be preserved
-						if (isset(oldAttributes)) {
+						if (Php.isset(oldAttributes)) {
 							// retrieve the old value for this attribute
 							try {
 								oldValue = this.pdo.getAttribute(key);
@@ -662,7 +663,7 @@ namespace Delight.Db
 							}
 
 							// if an old value has been found
-							if (isset(oldValue)) {
+							if (Php.isset(oldValue)) {
 								// if the old value differs from the new value that we"re going to set
 								if (oldValue != newValue) {
 									// save the old value so that we"re able to restore it later
@@ -676,7 +677,7 @@ namespace Delight.Db
 					}
 
 					// if the old state of the connection doesn"t need to be preserved
-					if (!isset(oldAttributes)) {
+					if (!Php.isset(oldAttributes)) {
 						// we"re done updating attributes for this connection once and for all
 						newAttributes = null;
 					}
@@ -709,7 +710,7 @@ namespace Delight.Db
 			//}catch (Exception e) {	ErrorHandler.rethrow(e);}
 
 			// if a performance profiler has been defined
-			if (isset(this.profiler)) {
+			if (Php.isset(this.profiler)) {
 				this.profiler.beginMeasurement();
 			}
 
@@ -721,7 +722,7 @@ namespace Delight.Db
 			//}	catch (Exception e) {	ErrorHandler.rethrow(e);		}
 
 			// if a performance profiler has been defined
-			if (isset(this.profiler)) {
+			if (Php.isset(this.profiler)) {
 				this.profiler.endMeasurement(query, bindValues, 1);
 			}
 

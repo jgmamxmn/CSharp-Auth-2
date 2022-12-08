@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Delight.Db;
 using System.Linq;
+using Delight.Shim;
 
 /*
  * PHP-Auth (https://github.com/delight-im/PHP-Auth)
@@ -22,9 +23,8 @@ namespace Delight.Auth
 		 * @param string|null dbSchema (optional) the schema name for all database tables used by this component
 		 */
 		public Administration(PdoDatabase databaseConnection, string dbTablePrefix, string dbSchema,
-			Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim)
-			: base(databaseConnection, dbTablePrefix, dbSchema,
-				  cookieShim, sessionShim, serverShim)
+			Shim.PhpInstance _phpInstance)
+			: base(databaseConnection, dbTablePrefix, dbSchema, _phpInstance)
 		{ }
 
 		/**
@@ -108,7 +108,7 @@ namespace Delight.Auth
 		 */
 		public void deleteUserByUsername(string username) {
 			var userData = this.getUserDataByUsername(
-				trim(username),
+				Php.trim(username),
 				new[] { "id" }
 			);
 
@@ -177,7 +177,7 @@ namespace Delight.Auth
 		 */
 		public void addRoleForUserByUsername(string username, Roles role) {
 			var userData = this.getUserDataByUsername(
-				trim(username),
+				Php.trim(username),
 				new[] { "id" }
 			);
 
@@ -250,7 +250,7 @@ namespace Delight.Auth
 		 */
 		public void removeRoleForUserByUsername(string username, Roles role) {
 			var userData = this.getUserDataByUsername(
-				trim(username),
+				Php.trim(username),
 				new[] { "id" }
 			);
 
@@ -305,10 +305,10 @@ namespace Delight.Auth
 				throw new UnknownIdException();
 			}
 
-			return array_filter(
+			return Php.array_filter(
 				Role.getMap(),
 				(each) => ((rolesBitmask & each) == each),
-				ARRAY_FILTER_USE_KEY.x
+				Php.ARRAY_FILTER_USE_KEY.x
 				)
 				.Values.Select(M => (Roles)int.Parse(M)).ToList();
 		}
@@ -357,7 +357,7 @@ namespace Delight.Auth
 		 * @throws AuthError if an internal problem occurred (do *not* catch)
 		 */
 		public void logInAsUserByUsername(string username) {
-			var numberOfMatchedUsers = this.logInAsUserByColumnValue("username", trim(username));
+			var numberOfMatchedUsers = this.logInAsUserByColumnValue("username", Php.trim(username));
 
 			if (numberOfMatchedUsers == 0) {
 				throw new UnknownUsernameException();
@@ -399,7 +399,7 @@ namespace Delight.Auth
 		 */
 		public void changePasswordForUserByUsername(string username, string newPassword) {
 			var userData = this.getUserDataByUsername(
-				trim(username),
+				Php.trim(username),
 				new[] { "id" }
 			);
 
@@ -552,7 +552,7 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			var numberOfMatchingUsers = (users != null) ? count(users) : 0;
+			var numberOfMatchingUsers = (users != null) ? Php.count(users) : 0;
 
 			if (numberOfMatchingUsers == 1)
 			{
@@ -565,8 +565,8 @@ namespace Delight.Auth
 						Shim.MasterCaster.GetString(user["email"]), 
 						Shim.MasterCaster.GetString(user["username"]),
 						(Status)Shim.MasterCaster.GetInt(user["status"]), 
-						(Roles)Shim.MasterCaster.GetInt(user["roles_mask"]), 
-						PHP_INT_MAX,
+						(Roles)Shim.MasterCaster.GetInt(user["roles_mask"]),
+						Php.PHP_INT_MAX,
 						false);
 				}
 				else 

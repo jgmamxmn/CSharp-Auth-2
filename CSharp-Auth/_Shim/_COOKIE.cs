@@ -35,9 +35,19 @@ namespace Delight.Shim
 		}
 	}
 
-	public class _COOKIE : BasicDictionaryWrapped<string,Delight.Cookie.Cookie>
+	public interface _COOKIE : Php.Issetable
 	{
-		public _COOKIE() : base()
+		Delight.Cookie.Cookie Get(string key);
+		bool TryGetValue(string key, out Delight.Cookie.Cookie cookieEntry);
+		void Set(string key, Delight.Cookie.Cookie cookieEntry);
+		void Unset(string key);
+		void Clear();
+		Dictionary<string, Delight.Cookie.Cookie> GetLiveCollection();
+	}
+
+	public class EmulatedCookieMgr : BasicDictionaryWrapped<string,Delight.Cookie.Cookie>, _COOKIE
+	{
+		public EmulatedCookieMgr() : base()
 		{
 		}
 		public Dictionary<string, Delight.Cookie.Cookie> GetLiveCollection() => Dict;
@@ -47,5 +57,14 @@ namespace Delight.Shim
 				Dict.Remove(key);
 			Dict.Add(key, cookieEntry);
 		}
+		public virtual void Unset(string key)
+		{
+			if (Dict.ContainsKey(key))
+				Dict.Remove(key);
+		}
+		public virtual Delight.Cookie.Cookie Get(string key) => Dict[key];
+		public bool TryGetValue(string key, out Delight.Cookie.Cookie cookieEntry) => Dict.TryGetValue(key, out cookieEntry);
+		public void Clear() => Dict.Clear();
+		public bool isset(string key) => Dict.ContainsKey(key);
 	}
 }

@@ -4,6 +4,9 @@ using System.Text;
 using Delight.Cookie;
 using Delight.Db;
 using System.Linq;
+using Delight.Shim;
+using System.Threading;
+using System.Net;
 
 /*
  * PHP-Auth (https://github.com/delight-im/PHP-Auth)
@@ -31,6 +34,8 @@ namespace Delight.Auth
 
 		public delegate bool DgtOnBeforeSuccess(int user_id);
 
+
+
 		/**
 		 * @param PdoDatabase|PdoDsn|\
 		 * @param string|null ipAddress 
@@ -40,6 +45,7 @@ namespace Delight.Auth
 		 * @param string|null dbSchema 
 		 */
 
+		/*
 		/// <summary>
 		/// 
 		/// </summary>
@@ -53,27 +59,25 @@ namespace Delight.Auth
 		/// <param name="shimCookie">(optional) an existing cookie emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
 		/// <param name="shimSession">(optional) an existing session emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
 		/// <param name="shimServer">(optional) an existing server environment emulator object. you will only have one of these if you are sharing an environment across multiple Auth objects, and you already have an Auth object initialized</param>
-		public Auth(PdoDatabase _databaseConnection, string _ipAddress, string _dbTablePrefix = null, bool? _throttling = null,
+		[Obsolete("It's recommended to use the Create method, with extensions, to create an Auth object")]
+		public Auth(PdoDatabase _databaseConnection, string _clientIpAddress, string _dbTablePrefix = null, bool? _throttling = null,
 			int? _sessionResyncInterval = null, string _dbSchema = null,
 			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment = null,
 			Shim._COOKIE shimCookie = null, Shim._SESSION shimSession = null, Shim._SERVER shimServer = null)
 			: base(_databaseConnection, _dbTablePrefix, _dbSchema,
 				  shimCookie ?? new Shim._COOKIE(),
 				  shimSession ?? new Shim._SESSION(),
-				  shimServer ?? new Shim._SERVER(_ipAddress))
+				  shimServer ?? new Shim._SERVER(_clientIpAddress))
 		{
-			DoConstructor(_databaseConnection, _ipAddress, _dbTablePrefix, _throttling, _sessionResyncInterval, _dbSchema, CallbackToInitializeEnvironment, shimCookie, shimSession, shimServer);
-		}
+			DoConstructor(_databaseConnection, _clientIpAddress, _dbTablePrefix, _throttling, _sessionResyncInterval, _dbSchema, CallbackToInitializeEnvironment, shimCookie, shimSession, shimServer);
+		}*/
 
-		private void DoConstructor(PdoDatabase _databaseConnection, string _ipAddress, string _dbTablePrefix = null, bool? _throttling = null,
-			int? _sessionResyncInterval = null, string _dbSchema = null,
-			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment = null,
-			Shim._COOKIE shimCookie = null, Shim._SESSION shimSession = null, Shim._SERVER shimServer = null)
-		{ 
-			if (CallbackToInitializeEnvironment != null)
-				CallbackToInitializeEnvironment(this, this._COOKIE, this._SESSION, this._SERVER);
-
-			this.ipAddress = !empty(_ipAddress) ? _ipAddress : (isset(_SERVER.REMOTE_ADDR) ? _SERVER.REMOTE_ADDR : null);
+		public Auth(PdoDatabase _databaseConnection, PhpInstance _phpInstance, string _clientIpAddress,
+			string _dbTablePrefix = null, string _dbSchema = null, 
+			bool? _throttling = null, int? _sessionResyncInterval = null)
+			: base(_databaseConnection, _dbTablePrefix, _dbSchema, _phpInstance)
+		{
+			this.ipAddress = !Php.empty(_clientIpAddress) ? _clientIpAddress : (Php.isset(_SERVER.REMOTE_ADDR) ? _SERVER.REMOTE_ADDR : null);
 			this.throttling = _throttling ?? true;
 			this.sessionResyncInterval = _sessionResyncInterval ?? (60 * 5);
 			this.rememberCookieName = createRememberCookieName();
@@ -84,6 +88,196 @@ namespace Delight.Auth
 			this.processRememberDirective();
 			this.resyncSessionIfNecessary();
 		}
+
+
+		/// <summary>
+		/// Returns an AuthBuilder object that can be used to create a suitable Auth object. Once created, daisychain its methods to set various options,
+		/// then, finally, call Build() to build the Auth object
+		/// </summary>
+		/// <returns></returns>
+		public static AuthBuilder Create()
+		{
+			return new AuthBuilder();
+		}
+		public class AuthBuilder
+		{
+			public delegate Shim._COOKIE DgtCookieFactory(PhpInstance Owner);
+			public delegate Shim._SESSION DgtSessionFactory(PhpInstance Owner);
+			public delegate Shim._SERVER DgtServerFactory(PhpInstance Owner, string ClientIpAddress);
+			private DgtCookieFactory CookieFactory;
+			private DgtSessionFactory SessionFactory;
+			private DgtServerFactory ServerFactory;
+
+			public AuthBuilder()
+			{
+				CookieFactory = (Owner) => new EmulatedCookieMgr();
+				SessionFactory = (Owner) => new _SESSION();
+				ServerFactory = (Owner, ClientIpAddress) => new _SERVER(ClientIpAddress);
+			}
+
+			private PdoDatabase PdoDatabase=null;
+			private PDO PdoInstance = null;
+			private PdoDsn PdoDsn = null;
+			private string DbUsername=null, DbPassword=null, DbHost=null, DbDsn=null, DbDatabase = null, DbTablePrefix = null;
+			private int? DbPort = null;
+			public AuthBuilder SetDatabase(PdoDatabase pdoDatabase)
+			{
+				PdoDatabase = pdoDatabase;
+				return this;
+			}
+			public AuthBuilder SetDatabase(PDO pdoInstance)
+			{
+				PdoInstance = pdoInstance;
+				return this;
+			}
+			public AuthBuilder SetDatabaseParams(PdoDsn dsn)
+			{
+				PdoDsn = dsn;
+				return this;
+			}
+			public AuthBuilder SetDatabaseParams(string Username, string Password)
+			{
+				DbUsername = Username;
+				DbPassword = Password;
+				return this;
+			}
+			public AuthBuilder SetDatabaseParams(string Host, int Port, string Username, string Password)
+			{
+				DbHost = Host;
+				DbPort = Port;
+				DbUsername = Username;
+				DbPassword = Password;
+				return this;
+			}
+			public AuthBuilder SetDatabaseName(string Database)
+			{
+				DbDatabase = Database;
+				return this;
+			}
+			public AuthBuilder SetDatabaseTablePrefix(string TablePrefix)
+			{
+				DbTablePrefix = TablePrefix;
+				return this;
+			}
+			public AuthBuilder SetDatabaseParams(string Dsn, string Username, string Password)
+			{
+				DbDsn = Dsn;
+				DbUsername = Username;
+				DbPassword = Password;
+				return this;
+			}
+
+			public AuthBuilder SetCookieManager(_COOKIE CookieMgr)
+			{
+				CookieFactory = (Owner) => CookieMgr;
+				return this;
+			}
+			public AuthBuilder SetCookieManager(DgtCookieFactory _CookieFactory)
+			{
+				CookieFactory = _CookieFactory;
+				return this;
+			}
+			public AuthBuilder SetSessionManager(_SESSION SessionMgr)
+			{
+				SessionFactory = (Owner) => SessionMgr;
+				return this;
+			}
+			public AuthBuilder SetSessionManager(DgtSessionFactory _SessionFactory)
+			{
+				SessionFactory = _SessionFactory;
+				return this;
+			}
+			public AuthBuilder SetServerManager(_SERVER ServerMgr)
+			{
+				ServerFactory = (Owner, ClientIpAddress) => ServerMgr;
+				return this;
+			}
+			public AuthBuilder SetServerManager(DgtServerFactory _ServerFactory)
+			{
+				ServerFactory = _ServerFactory;
+				return this;
+			}
+
+			private string ClientIpAddress = "0.0.0.0";
+			public AuthBuilder SetClientIp(string _ClientIpAddress)
+			{
+				ClientIpAddress = _ClientIpAddress;
+				return this;
+			}
+			public AuthBuilder SetClientIp(IPAddress _ClientIpAddress)
+			{
+				ClientIpAddress = _ClientIpAddress.ToString();
+				return this;
+			}
+			
+			/// <summary>
+			/// Call this once all options are set. Have you configured: (i) database connection, (ii) database table, (iii) remote IP?
+			/// </summary>
+			/// <returns></returns>
+			public Auth Build()
+			{
+				// Guarantee that PdoDatabase exists
+				if (!(PdoDatabase is object))
+				{
+					// Guarantee that PdoDsn exists (required to create PdoDatabase / PdoInstance)
+					if (!(PdoDsn is object))
+					{
+						Npgsql.NpgsqlConnectionStringBuilder _Dsn;
+						if (!string.IsNullOrEmpty(DbDsn))
+							_Dsn = new Npgsql.NpgsqlConnectionStringBuilder(DbDsn);
+						else
+							_Dsn = new Npgsql.NpgsqlConnectionStringBuilder();
+						if (!string.IsNullOrEmpty(DbHost)) _Dsn.Host = DbHost;
+						if (DbPort is int iDbPort) _Dsn.Port = iDbPort;
+						if (!string.IsNullOrEmpty(DbUsername)) _Dsn.Username = DbUsername;
+						if (!string.IsNullOrEmpty(DbPassword)) _Dsn.Password = DbPassword;
+						if (!string.IsNullOrEmpty(DbDatabase)) _Dsn.Database = DbDatabase;
+
+						PdoDsn = new PdoDsn(_Dsn.ConnectionString, _Dsn.Username, _Dsn.Password);
+					}
+
+					// Guarantee that PdoInstance exists (required to create PdoDatabase)
+					if (!(PdoInstance is object))
+					{
+						PdoInstance = new PDO(PdoDsn.getDsn(), PdoDsn.getUsername(), PdoDsn.getPassword());
+					}
+
+					PdoDatabase = new PdoDatabase(PdoInstance, PdoDsn);
+				}
+
+				// Php instance
+				var Inst = new PhpInstance(null, null, null);
+				Inst._COOKIE = CookieFactory(Inst);
+				Inst._SESSION = SessionFactory(Inst);
+				Inst._SERVER = ServerFactory(Inst, ClientIpAddress);
+
+				// Create Auth object
+				var Ret = new Auth(PdoDatabase, Inst, ClientIpAddress, DbTablePrefix, null, null, null);
+
+				return Ret;
+			}
+		}
+
+	
+		/*private void DoConstructor(PdoDatabase _databaseConnection, string _clientIpAddress, string _dbTablePrefix = null, bool? _throttling = null,
+			int? _sessionResyncInterval = null, string _dbSchema = null,
+			Action<Auth, Shim._COOKIE, Shim._SESSION, Shim._SERVER> CallbackToInitializeEnvironment = null,
+			Shim._COOKIE shimCookie = null, Shim._SESSION shimSession = null, Shim._SERVER shimServer = null)
+		{ 
+			if (CallbackToInitializeEnvironment != null)
+				CallbackToInitializeEnvironment(this, this._COOKIE, this._SESSION, this._SERVER);
+
+			this.ipAddress = !Php.empty(_clientIpAddress) ? _clientIpAddress : (Php.isset(_SERVER.REMOTE_ADDR) ? _SERVER.REMOTE_ADDR : null);
+			this.throttling = _throttling ?? true;
+			this.sessionResyncInterval = _sessionResyncInterval ?? (60 * 5);
+			this.rememberCookieName = createRememberCookieName();
+
+			this.initSessionIfNecessary();
+			this.enhanceHttpSecurity();
+
+			this.processRememberDirective();
+			this.resyncSessionIfNecessary();
+		}*/
 
 		/** Initializes the session and sets the correct configuration */
 		private void initSessionIfNecessary() {
@@ -103,19 +297,19 @@ namespace Delight.Auth
 		/** Improves the application"s security over HTTP(S) by setting specific headers */
 		private void enhanceHttpSecurity() {
 			// remove exposure of PHP version (at least where possible)
-			header_remove("X-Powered-By");
+			PhpInstance.header_remove("X-Powered-By");
 
 			// if the user is signed in
 			if (this.isLoggedIn()) {
 				// prevent clickjacking
-				header("X-Frame-Options: sameorigin");
+				PhpInstance.header("X-Frame-Options: sameorigin");
 				// prevent content sniffing (MIME sniffing)
-				header("X-Content-Type-Options: nosniff");
+				PhpInstance.header("X-Content-Type-Options: nosniff");
 
 				// disable caching of potentially sensitive data
-				header("Cache-Control: no-store, no-cache, must-revalidate", true);
-				header("Expires: Thu, 19 Nov 1981 00:00:00 GMT", true);
-				header("Pragma: no-cache", true);
+				PhpInstance.header("Cache-Control: no-store, no-cache, must-revalidate", true);
+				PhpInstance.header("Expires: Thu, 19 Nov 1981 00:00:00 GMT", true);
+				PhpInstance.header("Pragma: no-cache", true);
 			}
 		}
 
@@ -125,29 +319,30 @@ namespace Delight.Auth
 			if (!this.isLoggedIn()) 
 			{
 				// if there is currently no cookie for the "remember me" feature
-				if (!isset(_COOKIE, this.rememberCookieName)) 
+				if (!Php.isset(_COOKIE, this.rememberCookieName)) 
 				{
 					// if an old cookie for that feature from versions v1.x.x to v6.x.x has been found
-					if (isset(_COOKIE, "auth_remember")) 
+					//if (Php.isset(_COOKIE, "auth_remember")) 
+					if(_COOKIE.TryGetValue("auth_remember", out Cookie.Cookie authRememberCookie))
 					{
 						// use the value from that old cookie instead
-						_COOKIE[this.rememberCookieName] = _COOKIE["auth_remember"];
+						_COOKIE.Set(this.rememberCookieName, authRememberCookie);
 					}
 				}
 
 				// if a remember cookie is set
-				if (isset(_COOKIE, this.rememberCookieName)) 
+				if (Php.isset(_COOKIE, this.rememberCookieName)) 
 				{
 					// assume the cookie and its contents to be invalid until proven otherwise
 					var valid = false;
 
 					// split the cookie"s content into selector and token
-					var parts = explode(COOKIE_CONTENT_SEPARATOR, _COOKIE[this.rememberCookieName].getValue(), 2);
+					var parts = Php.explode(COOKIE_CONTENT_SEPARATOR, _COOKIE.Get(this.rememberCookieName).getValue(), 2);
 
 					DatabaseResultRow rememberData;
 
 					// if both selector and token were found
-					if (!empty(parts[0]) && !empty(parts[1])) {
+					if (!Php.empty(parts[0]) && !Php.empty(parts[1])) {
 						try {
 							rememberData = this.db.selectRow(
 								"SELECT a.user, a.token, a.expires, b.email, b.username, b.status, b.roles_mask, b.force_logout FROM " + this.makeTableName("users_remembered") + " AS a JOIN " + this.makeTableName("users") + " AS b ON a.user = b.id WHERE a.selector = @selector",
@@ -158,9 +353,9 @@ namespace Delight.Auth
 							throw new DatabaseError(e.Message);
 						}
 
-						if (!empty(rememberData)) {
-							if ((Delight.Shim.MasterCaster.GetInt(rememberData["expires"])) >= time()) {
-								if (password_verify(parts[1], Delight.Shim.MasterCaster.GetString(rememberData["token"]))) {
+						if (!Php.empty(rememberData)) {
+							if ((Delight.Shim.MasterCaster.GetInt(rememberData["expires"])) >= Php.time()) {
+								if (Php.password_verify(parts[1], Delight.Shim.MasterCaster.GetString(rememberData["token"]))) {
 									// the cookie and its contents have now been proven to be valid
 									valid = true;
 
@@ -194,14 +389,14 @@ namespace Delight.Auth
 			// if the user is signed in
 			if (this.isLoggedIn()) {
 				// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-				if (!isset(_SESSION.SESSION_FIELD_LAST_RESYNC)) {
+				if (!Php.isset(_SESSION.SESSION_FIELD_LAST_RESYNC)) {
 					_SESSION.SESSION_FIELD_LAST_RESYNC = 0;
 				}
 
 				DatabaseResultRow authoritativeData;
 
 				// if it"s time for resynchronization
-				if ((_SESSION.SESSION_FIELD_LAST_RESYNC! + this.sessionResyncInterval) <= time()) {
+				if ((_SESSION.SESSION_FIELD_LAST_RESYNC! + this.sessionResyncInterval) <= Php.time()) {
 					// fetch the authoritative data from the database again
 					try {
 						authoritativeData = this.db.selectRow(
@@ -214,9 +409,9 @@ namespace Delight.Auth
 					}
 
 					// if the user"s data has been found
-					if (!empty(authoritativeData)) {
+					if (!Php.empty(authoritativeData)) {
 						// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-						if (!isset(_SESSION.SESSION_FIELD_FORCE_LOGOUT)) {
+						if (!Php.isset(_SESSION.SESSION_FIELD_FORCE_LOGOUT)) {
 							_SESSION.SESSION_FIELD_FORCE_LOGOUT = 0;
 						}
 
@@ -234,7 +429,7 @@ namespace Delight.Auth
 							_SESSION.SESSION_FIELD_ROLES = (Roles)Delight.Shim.MasterCaster.GetInt(authoritativeData["roles_mask"]);
 
 							// remember that we"ve just performed the required resynchronization
-							_SESSION.SESSION_FIELD_LAST_RESYNC = time();
+							_SESSION.SESSION_FIELD_LAST_RESYNC = Php.time();
 						}
 					}
 					// if no data has been found for the user
@@ -410,8 +605,8 @@ namespace Delight.Auth
 					throw new DatabaseError(e.Message);
 				}
 
-				if (!empty(expectedHash)) {
-					bool validated = password_verify(password, expectedHash);
+				if (!Php.empty(expectedHash)) {
+					bool validated = Php.password_verify(password, expectedHash);
 
 					if (!validated) {
 						this.throttle(new[] { "reconfirmPassword", this.getIpAddress() }, 3, (60 * 60), 4, false);
@@ -440,7 +635,7 @@ namespace Delight.Auth
 				var rememberDirectiveSelector = this.getRememberDirectiveSelector();
 
 				// if such a remember directive exists
-				if (isset(rememberDirectiveSelector)) {
+				if (Php.isset(rememberDirectiveSelector)) {
 					// delete the local remember directive
 					this.deleteRememberDirectiveForUserById(
 						this.getUserId(),
@@ -479,7 +674,7 @@ namespace Delight.Auth
 			this.forceLogoutForUserById(this.getUserId());
 
 			// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-			if (!isset(_SESSION.SESSION_FIELD_FORCE_LOGOUT)) {
+			if (!Php.isset(_SESSION.SESSION_FIELD_FORCE_LOGOUT)) {
 				_SESSION.SESSION_FIELD_FORCE_LOGOUT = 0;
 			}
 
@@ -487,14 +682,14 @@ namespace Delight.Auth
 			_SESSION.SESSION_FIELD_FORCE_LOGOUT++;
 
 			// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
-			Cookie.Session.regenerate(this, true);
+			Cookie.Session.regenerate(PhpInstance, true);
 
 			// if there had been an existing remember directive previously
-			if (isset(previousRememberDirectiveExpiry)) {
+			if (Php.isset(previousRememberDirectiveExpiry)) {
 				// restore the directive with the old expiry date but new credentials
 				this.createRememberDirective(
 					this.getUserId(),
-					previousRememberDirectiveExpiry - time()
+					previousRememberDirectiveExpiry - Php.time()
 				);
 			}
 		}
@@ -527,7 +722,7 @@ namespace Delight.Auth
 			// delete the session cookie
 			this.deleteSessionCookie();
 			// let PHP destroy the session
-			session_destroy();
+			PhpInstance.session_destroy();
 		}
 
 		/**
@@ -540,7 +735,7 @@ namespace Delight.Auth
 		private void createRememberDirective(int userId, int? duration) {
 			var selector = createRandomString(24);
 			var token = createRandomString(32);
-			var tokenHashed = password_hash(token, PASSWORD_ALGO.PASSWORD_DEFAULT);
+			var tokenHashed = Php.password_hash(token, Php.PASSWORD_ALGO.PASSWORD_DEFAULT);
 			DateTime? expires = 
 				(duration is int iDuration ? DateTime.Now.AddSeconds(iDuration) : null);
 
@@ -587,11 +782,11 @@ namespace Delight.Auth
 				return false;
 			}*/
 
-			var myParams = session_get_cookie_params();
+			var myParams = PhpInstance.session_get_cookie_params();
 
 			string content;
 
-			if (isset(selector) && isset(token)) {
+			if (Php.isset(selector) && Php.isset(token)) {
 				content = selector + COOKIE_CONTENT_SEPARATOR + token;
 			}
 			else {
@@ -600,7 +795,7 @@ namespace Delight.Auth
 
 			// save the cookie with the selector and token (requests a cookie to be written on the client)
 			{
-				var cookie = new Delight.Cookie.Cookie(this.rememberCookieName, _COOKIE, _SESSION, _SERVER);
+				var cookie = new Delight.Cookie.Cookie(this.rememberCookieName, PhpInstance);
 				cookie.setValue(content);
 				cookie.setExpiryTime(expires);
 				cookie.setPath(myParams.path);
@@ -615,10 +810,10 @@ namespace Delight.Auth
 			}
 
 			// if we"ve been deleting the cookie above
-			if (!isset(selector) || !isset(token)) {
+			if (!Php.isset(selector) || !Php.isset(token)) {
 				// attempt to delete a potential old cookie from versions v1.x.x to v6.x.x as well (requests a cookie to be written on the client)
-				var cookie = new Delight.Cookie.Cookie("auth_remember", _COOKIE, _SESSION, _SERVER);
-				cookie.setPath((!empty(myParams.path)) ? myParams.path : "/");
+				var cookie = new Delight.Cookie.Cookie("auth_remember", PhpInstance);
+				cookie.setPath((!Php.empty(myParams.path)) ? myParams.path : "/");
 				cookie.setDomain(myParams.domain);
 				cookie.setHttpOnly(myParams.httponly);
 				cookie.setSecureOnly(myParams.secure);
@@ -634,7 +829,7 @@ namespace Delight.Auth
 
 					new Dictionary<string, object>
 					{
-						{ "last_login" , time() }
+						{ "last_login" , Php.time() }
 					},
 					new Dictionary<string, object>
 					{
@@ -655,10 +850,10 @@ namespace Delight.Auth
 		 * @throws AuthError if an internal problem occurred (do *not* catch)
 		 */
 		private void deleteSessionCookie() {
-			var myParams = session_get_cookie_params();
+			var myParams = PhpInstance.session_get_cookie_params();
 
 			// ask for the session cookie to be deleted (requests a cookie to be written on the client)
-			var cookie = new Delight.Cookie.Cookie(session_name(), _COOKIE, _SESSION, _SERVER);
+			var cookie = new Delight.Cookie.Cookie(PhpInstance.session_name(), PhpInstance);
 			cookie.setPath(myParams.path);
 			cookie.setDomain(myParams.domain);
 			cookie.setHttpOnly(myParams.httponly);
@@ -703,9 +898,9 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			if (!empty(confirmationData)) {
-				if (password_verify(token, Delight.Shim.MasterCaster.GetString(confirmationData["token"]))) {
-					if (Delight.Shim.MasterCaster.GetInt(confirmationData["expires"]) >= time()) {
+			if (!Php.empty(confirmationData)) {
+				if (Php.password_verify(token, Delight.Shim.MasterCaster.GetString(confirmationData["token"]))) {
+					if (Delight.Shim.MasterCaster.GetInt(confirmationData["expires"]) >= Php.time()) {
 						// invalidate any potential outstanding password reset requests
 						try {
 							this.db.delete(
@@ -1130,7 +1325,7 @@ namespace Delight.Auth
 				);
 			}
 			else if (username != null) {
-				username = trim(username);
+				username = Php.trim(username);
 
 				// attempt to look up the account information using the specified username
 				userData = this.getUserDataByUsername(
@@ -1146,15 +1341,15 @@ namespace Delight.Auth
 
 			password = validatePassword(password);
 
-			if (password_verify(password, userData.password)) {
+			if (Php.password_verify(password, userData.password)) {
 				// if the password needs to be re-hashed to keep up with improving password cracking techniques
-				if (password_needs_rehash(userData.password)) {
+				if (Php.password_needs_rehash(userData.password)) {
 					// create a new hash from the password and update it in the database
 					this.updatePasswordInternal(userData.id, password);
 				}
 
 				if (userData.verified ) {
-					if (!isset(onBeforeSuccess) || (is_callable(onBeforeSuccess) && onBeforeSuccess(userData.id) == true)) {
+					if (!Php.isset(onBeforeSuccess) || (Php.is_callable(onBeforeSuccess) && onBeforeSuccess(userData.id) == true)) {
 						this.onLoginSuccessful(userData.id, userData.email, userData.username, userData.status, userData.roles_mask, userData.force_logout, false);
 
 						if (rememberDuration != null) {
@@ -1166,10 +1361,10 @@ namespace Delight.Auth
 					else {
 						this.throttle(new[] { "attemptToLogin", this.getIpAddress() }, 4, (60 * 60), 5, false);
 
-						if (isset(email)) {
+						if (Php.isset(email)) {
 							this.throttle(new[] { "attemptToLogin", "email", email }, 500, (60 * 60 * 24), simulated:false);
 						}
-						else if(isset(username)) {
+						else if(Php.isset(username)) {
 							this.throttle(new[] { "attemptToLogin", "username", username }, 500, (60 * 60 * 24), simulated:false);
 						}
 
@@ -1183,10 +1378,10 @@ namespace Delight.Auth
 			else {
 				this.throttle(new[] { "attemptToLogin", this.getIpAddress() }, 4, (60 * 60), 5, false);
 
-				if (isset(email)) {
+				if (Php.isset(email)) {
 					this.throttle(new[] { "attemptToLogin", "email", email }, 500, (60 * 60 * 24), simulated:false);
 				}
-				else if(isset(username)) {
+				else if(Php.isset(username)) {
 					this.throttle(new[] { "attemptToLogin", "username", username }, 500, (60 * 60 * 24), simulated:false);
 				}
 
@@ -1209,7 +1404,7 @@ namespace Delight.Auth
 		private UserDataRow getUserDataByEmailAddress(string email, string[] requestedColumns) {
 			DatabaseResultRow userData;
 			try {
-				var projection = implode(", ", requestedColumns);
+				var projection = Php.implode(", ", requestedColumns);
 				userData = this.db.selectRow(
 					"SELECT "+projection+ " FROM "+ this.makeTableName("users")+ " WHERE email = @email",
 					new BindValues { { "@email", email } }
@@ -1219,7 +1414,7 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			if (!empty(userData)) {
+			if (!Php.empty(userData)) {
 				return new UserDataRow(userData);
 			}
 			else {
@@ -1241,7 +1436,7 @@ namespace Delight.Auth
 					new BindValues
 					{
 						{"@user", userId },
-						{"@expires", time() }
+						{"@expires", Php.time() }
 					}
 				);
 
@@ -1278,8 +1473,8 @@ namespace Delight.Auth
 		private void createPasswordResetRequest(int userId, int expiresAfter, DgtSendPasswordResetInfoToUser callback) {
 			string selector = createRandomString(20);
 			string token = createRandomString(20);
-			string tokenHashed = password_hash(token, PASSWORD_ALGO.PASSWORD_DEFAULT);
-			int expiresAt = time() + expiresAfter;
+			string tokenHashed = Php.password_hash(token, Php.PASSWORD_ALGO.PASSWORD_DEFAULT);
+			int expiresAt = Php.time() + expiresAfter;
 
 			try {
 				this.db.insert(
@@ -1297,7 +1492,7 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			if (is_callable(callback)) {
+			if (Php.is_callable(callback)) {
 				callback(selector, token);
 			}
 			else 
@@ -1347,10 +1542,10 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			if (!empty(resetData)) {
+			if (!Php.empty(resetData)) {
 				if (Delight.Shim.MasterCaster.GetInt(resetData["resettable"]) == 1) {
-					if (password_verify(token, Shim.MasterCaster.GetString(resetData["token"]))) {
-						if ((Delight.Shim.MasterCaster.GetInt(resetData["expires"])) >= time()) {
+					if (Php.password_verify(token, Shim.MasterCaster.GetString(resetData["token"]))) {
+						if ((Delight.Shim.MasterCaster.GetInt(resetData["expires"])) >= Php.time()) {
 							newPassword = validatePassword(newPassword);
 							this.updatePasswordInternal(Delight.Shim.MasterCaster.GetInt(resetData["user"]), newPassword);
 							this.forceLogoutForUserById(Delight.Shim.MasterCaster.GetInt(resetData["user"]));
@@ -1580,7 +1775,7 @@ namespace Delight.Auth
 		 * @return boolean whether the user is logged in or not
 		 */
 		public bool isLoggedIn() {
-			return isset(_SESSION) && isset(_SESSION.SESSION_FIELD_LOGGED_IN) && (_SESSION.SESSION_FIELD_LOGGED_IN is bool b && b == true);
+			return Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_LOGGED_IN) && (_SESSION.SESSION_FIELD_LOGGED_IN is bool b && b == true);
 		}
 
 		/**
@@ -1598,7 +1793,7 @@ namespace Delight.Auth
 		 * @return int the user ID
 		 */
 		public int getUserId() {
-			if (isset(_SESSION) && (_SESSION.SESSION_FIELD_USER_ID is int ret)) {
+			if (Php.isset(_SESSION) && (_SESSION.SESSION_FIELD_USER_ID is int ret)) {
 				return ret;
 			}
 			else {
@@ -1621,7 +1816,7 @@ namespace Delight.Auth
 		 * @return string the email address
 		 */
 		public string getEmail() {
-			if (isset(_SESSION) && isset(_SESSION.SESSION_FIELD_EMAIL)) {
+			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_EMAIL)) {
 				return _SESSION.SESSION_FIELD_EMAIL as string;
 			}
 			else {
@@ -1635,7 +1830,7 @@ namespace Delight.Auth
 		 * @return string the display name
 		 */
 		public string getUsername() {
-			if (isset(_SESSION) && isset(_SESSION.SESSION_FIELD_USERNAME)) {
+			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_USERNAME)) {
 				return _SESSION.SESSION_FIELD_USERNAME as string;
 			}
 			else {
@@ -1649,7 +1844,7 @@ namespace Delight.Auth
 		 * @return int the status as one of the constants from the {@see Status} class
 		 */
 		public Status getStatus() {
-			if (isset(_SESSION) && isset(_SESSION.SESSION_FIELD_STATUS)) {
+			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_STATUS)) {
 				return (Status)_SESSION.SESSION_FIELD_STATUS;
 			}
 			else {
@@ -1739,7 +1934,7 @@ namespace Delight.Auth
 		 */
 		public bool hasRole(Roles role) {
 
-			if (isset(_SESSION) && isset(_SESSION.SESSION_FIELD_ROLES)) {
+			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_ROLES)) {
 				return
 				(
 					(
@@ -1795,10 +1990,10 @@ namespace Delight.Auth
 		 * @return array
 		 */
 		public Dictionary<Roles, string> getRoles() {
-			return array_filter(
+			return Php.array_filter(
 				Role.getMap(),
 				(r) => this.hasRole(r), // [this, "hasRole"],
-				ARRAY_FILTER_USE_KEY.x
+				Php.ARRAY_FILTER_USE_KEY.x
 			);
 		}
 
@@ -1808,7 +2003,7 @@ namespace Delight.Auth
 		 * @return bool whether they have been remembered
 		 */
 		public bool isRemembered() {
-			if (isset(_SESSION) && isset(_SESSION.SESSION_FIELD_REMEMBERED)) {
+			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_REMEMBERED)) {
 				return (bool)_SESSION.SESSION_FIELD_REMEMBERED;
 			}
 			else {
@@ -1847,13 +2042,13 @@ namespace Delight.Auth
 
 			// generate a unique key for the bucket (consisting of 44 or fewer ASCII characters)
 			var key = Base64.encodeUrlSafeWithoutPadding(
-				hash(HASH_ALGO.sha256,
-					implode("\n", criteria),
+				Php.hash(Php.HASH_ALGO.sha256,
+					Php.implode("\n", criteria),
 					true
 				)
 			);
 
-			var now = time();
+			var now = Php.time();
 
 			// determine the volume of the bucket
 			var capacity = burstiness * supply;
@@ -1894,9 +2089,9 @@ namespace Delight.Auth
 				: now);
 
 			// replenish the bucket as appropriate
-			var secondsSinceLastReplenishment = max(0, now - Shim.MasterCaster.GetInt(bucket["replenished_at"]));
+			var secondsSinceLastReplenishment = Php.max(0, now - Shim.MasterCaster.GetInt(bucket["replenished_at"]));
 			var tokensToAdd = secondsSinceLastReplenishment * bandwidthPerSecond;
-			bucket["tokens"] = fmin((double)capacity, Shim.MasterCaster.GetDbl(bucket["tokens"]) + tokensToAdd);
+			bucket["tokens"] = Php.fmin((double)capacity, Shim.MasterCaster.GetDbl(bucket["tokens"]) + tokensToAdd);
 			bucket["replenished_at"] = now;
 
 			var accepted = (Shim.MasterCaster.GetFloat(bucket["tokens"])) >= cost;
@@ -1904,12 +2099,12 @@ namespace Delight.Auth
 			if (!simulated) {
 				if (accepted) {
 					// remove the requested number of tokens from the bucket
-					bucket["tokens"] = max(0, (Shim.MasterCaster.GetFloat(bucket["tokens"]) - (float)cost));
+					bucket["tokens"] = Php.max(0, (Shim.MasterCaster.GetFloat(bucket["tokens"]) - (float)cost));
 				}
 
 				// set the earliest time after which the bucket *may* be deleted (as a Unix timestamp in seconds)
 
-				bucket["expires_at"] = now + floor(((double)capacity) / bandwidthPerSecond * 2.0);
+				bucket["expires_at"] = now + Php.floor(((double)capacity) / bandwidthPerSecond * 2.0);
 
 				int affected;
 
@@ -1946,7 +2141,7 @@ namespace Delight.Auth
 			}
 			else {
 				var tokensMissing = ((float)cost - Shim.MasterCaster.GetFloat(bucket["tokens"]));
-				var estimatedWaitingTimeSeconds = ceil(((double)tokensMissing) / bandwidthPerSecond);
+				var estimatedWaitingTimeSeconds = Php.ceil(((double)tokensMissing) / bandwidthPerSecond);
 
 				throw new TooManyRequestsException("", estimatedWaitingTimeSeconds, null, null, null, key, string.Join("; ", criteria));
 			}
@@ -1959,10 +2154,10 @@ namespace Delight.Auth
 		 *
 		 * @return Administration
 		 */
-		public Administration admin(Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim)
+		public Administration admin()
 		{
 			return new Administration(this.db, this.dbTablePrefix, this.dbSchema, 
-				cookieShim, sessionShim, serverShim);
+				PhpInstance);
 		}
 
 		/**
@@ -1993,11 +2188,11 @@ namespace Delight.Auth
 		 */
 		public static string createCookieName(string descriptor, string seed = null) {
 			// use the supplied seed or the current UNIX time in seconds
-			seed = (!string.IsNullOrEmpty(seed)) ? seed : time().ToString();
+			seed = (!string.IsNullOrEmpty(seed)) ? seed : Php.time().ToString();
 
 			foreach (var cookiePrefix in COOKIE_PREFIXES) {
 				// if the seed contains a certain cookie prefix
-				if (strpos(seed, cookiePrefix) == 0) {
+				if (Php.strpos(seed, cookiePrefix) == 0) {
 					// prepend the same prefix to the descriptor
 					descriptor = cookiePrefix + descriptor;
 				}
@@ -2005,8 +2200,8 @@ namespace Delight.Auth
 
 			// generate a unique token based on the name(space) of this library and on the seed
 			var token = Base64.encodeUrlSafeWithoutPadding(
-			md5(
-					__NAMESPACE__ + "\n" + seed,
+			Php.md5(
+					Php.__NAMESPACE__ + "\n" + seed,
 					true
 				)
 			);
@@ -2023,7 +2218,7 @@ namespace Delight.Auth
 		public string createRememberCookieName(string sessionName = null) {
 			return createCookieName(
 				"remember",
-				(sessionName != null) ? sessionName : session_name()
+				(sessionName != null) ? sessionName : PhpInstance.session_name()
 			);
 		}
 
@@ -2033,8 +2228,8 @@ namespace Delight.Auth
 		 * @return string|null
 		 */
 		private string getRememberDirectiveSelector() {
-			if (isset(_COOKIE, this.rememberCookieName)) {
-				var selectorAndToken = explode(COOKIE_CONTENT_SEPARATOR, _COOKIE[this.rememberCookieName].getValue(), 2);
+			if (Php.isset(_COOKIE, this.rememberCookieName)) {
+				var selectorAndToken = Php.explode(COOKIE_CONTENT_SEPARATOR, _COOKIE.Get(this.rememberCookieName).getValue(), 2);
 				return selectorAndToken[0];
 			}
 			else {
@@ -2054,7 +2249,7 @@ namespace Delight.Auth
 				var existingSelector = this.getRememberDirectiveSelector();
 
 				// if there is currently a remember directive whose selector we have just retrieved
-				if (isset(existingSelector)) {
+				if (Php.isset(existingSelector)) {
 					// fetch the expiry date for the given selector
 					var existingExpiry = this.db.selectValue(
 						"SELECT expires FROM " + this.makeTableName("users_remembered") + " WHERE selector = @selector AND user = @user",
@@ -2066,7 +2261,7 @@ namespace Delight.Auth
 					);
 
 					// if an expiration date has been found
-					if (isset(existingExpiry)) {
+					if (Php.isset(existingExpiry)) {
 						// return the date
 						return Shim.MasterCaster.GetInt(existingExpiry);
 					}

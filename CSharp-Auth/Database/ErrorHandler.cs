@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Delight.Auth;
+using Delight.Shim;
 
 namespace Delight.Db
 {
@@ -16,7 +17,7 @@ namespace Delight.Db
 	 *
 	 * https://dev+mysql+com/doc/refman/5+5/en/error-messages-server+html
 	 */
-	sealed public class ErrorHandler : Delight.Shim.Shimmed_PHPOnly
+	sealed public class ErrorHandler
 	{
 
 		/**
@@ -37,16 +38,16 @@ namespace Delight.Db
 			string e_getCode = null; // e.getCode();
 
 			// if an error code is available
-			if (!empty(e_getCode)) {
+			if (!Php.empty(e_getCode)) {
 				// remember the error code
 				int.TryParse(e_getCode, out error); //error = e_getCode;
 
 				// if the error code is an "SQLSTATE" error
-				if (strlen(e_getCode) == 5) {
+				if (Php.strlen(e_getCode) == 5) {
 					// remember the public class as well
-					errorclass = substr(e_getCode, 0, 2);
+					errorclass = Php.substr(e_getCode, 0, 2);
 					// and remember the subpublic class
-					errorSubclass = substr(e_getCode, 2);
+					errorSubclass = Php.substr(e_getCode, 2);
 				}
 			}
 

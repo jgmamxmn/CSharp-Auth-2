@@ -13,8 +13,6 @@ namespace Delight.Shim
 			REMOTE_ADDR = RemoteIp;
 		}
 
-		//virtual public string REMOTE_ADDR => "127.0.0.1";
 		public readonly string REMOTE_ADDR;
-
 	}
 }

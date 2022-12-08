@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Delight.Shim;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,13 +7,9 @@ using System.Threading.Tasks;
 
 namespace Delight.Cookie
 {
-	public class Session : Shim.Shimmed_Full
+	public static class Session
 	{
-		public Session(Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim)
-			: base(cookieShim, sessionShim, serverShim)
-		{ }
-
-		public static void regenerate(Shim.Shimmed_Full shim, bool deleteOldSession = false, string sameSiteRestriction = Cookie.SAME_SITE_RESTRICTION_LAX)
+		public static void regenerate(PhpInstance shim, bool deleteOldSession = false, string sameSiteRestriction = Cookie.SAME_SITE_RESTRICTION_LAX)
 		{
 			// run PHP's built-in equivalent
 			shim.session_regenerate_id(deleteOldSession);
@@ -21,13 +18,13 @@ namespace Delight.Cookie
 			rewriteCookieHeader(shim, sameSiteRestriction);
 		}
 
-		private static void rewriteCookieHeader(Shim.Shimmed_Full shim, string sameSiteRestriction = Cookie.SAME_SITE_RESTRICTION_LAX)
+		private static void rewriteCookieHeader(PhpInstance shim, string sameSiteRestriction = Cookie.SAME_SITE_RESTRICTION_LAX)
 		{				
 			// get and remove the original cookie header set by PHP
 			var originalCookieHeader = Delight.Http.ResponseHeader.take(shim, "Set-Cookie", shim.session_name() + "=");
 
 			// if a cookie header has been found
-			if (Shim.Shimmed_PHPOnly.isset(originalCookieHeader))
+			if (Php.isset(originalCookieHeader))
 			{
 				// parse it into a cookie instance
 				var parsedCookie = Cookie.parse(shim, originalCookieHeader);

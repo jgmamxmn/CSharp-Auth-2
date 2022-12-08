@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Delight.Auth;
+using Delight.Shim;
 
 namespace Delight.Db
 {
@@ -15,7 +16,7 @@ namespace Delight.Db
 	use Delight\Db\Throwable\TransactionFailureException;*/
 
 	/** Safe and convenient SQL database access in a driver-agnostic way */
-	public abstract class Database : Delight.Shim.Shimmed_PHPOnly
+	public abstract class Database
 	{
 		public delegate void DgtOnConnectListener(PdoDatabase pdoDatabase);
 

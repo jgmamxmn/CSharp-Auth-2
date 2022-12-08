@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Delight.Shim;
 
 namespace Delight
 {
 	/** Utilities for encoding and decoding data using Base64 and variants thereof */
-	public sealed partial class Base64 : Delight.Shim.Shimmed_PHPOnly
+	public sealed partial class Base64 
 	{
 		/**
 		 * The last three characters from the alphabet of the standard implementation
@@ -73,7 +74,7 @@ namespace Delight
 		{
 			var encoded = encode(data);
 
-			return strtr(
+			return Php.strtr(
 				encoded,
 				LAST_THREE_STANDARD,
 				LAST_THREE_URL_SAFE
@@ -89,7 +90,7 @@ namespace Delight
 		 */
 		public static byte[] decodeUrlSafe(string data)
 		{
-			data = strtr(
+			data = Php.strtr(
 				data,
 				LAST_THREE_URL_SAFE,
 				LAST_THREE_STANDARD
@@ -109,15 +110,15 @@ namespace Delight
 		{
 			var encoded = encode(data);
 
-			encoded = rtrim(
+			encoded = Php.rtrim(
 				encoded,
-				substr(LAST_THREE_STANDARD, -1)
+				Php.substr(LAST_THREE_STANDARD, -1)
 				);
 
-			return strtr(
+			return Php.strtr(
 				encoded,
-					substr(LAST_THREE_STANDARD, 0, -1),
-					substr(LAST_THREE_URL_SAFE, 0, -1)
+					Php.substr(LAST_THREE_STANDARD, 0, -1),
+					Php.substr(LAST_THREE_URL_SAFE, 0, -1)
 				);
 		}
 		public static string encodeUrlSafeWithoutPadding(string data)

@@ -8,7 +8,7 @@ using Delight.Auth;
 namespace Delight.Db
 {
 	/** Profiler that monitors performance of individual database queries and statements */
-	public abstract class Profiler : Delight.Shim.Shimmed_PHPOnly
+	public abstract class Profiler
 	{
 
 		/** Starts a new measurement */

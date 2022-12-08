@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Delight.Shim;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,7 +21,7 @@ namespace Delight.Cookie
 	 *
 	 * Note that cookies must always be set before the HTTP headers are sent to the client, i.e. before the actual output starts
 	 */
-	public sealed class Cookie : Delight.Shim.Shimmed_Full
+	public sealed class Cookie
 	{
 
 		/** @var string name prefix indicating that the cookie must be from a secure origin (i.e. HTTPS) and the "secure" attribute must be set */
@@ -48,13 +50,16 @@ namespace Delight.Cookie
 		/** @var string|null indicates that the cookie should not be sent along with cross-site requests (either `null`, `None`, `Lax` or `Strict`) */
 		private string sameSiteRestriction;
 
+
+		PhpInstance PhpInstance;
+		Shim._COOKIE _COOKIE => PhpInstance._COOKIE;
+
 		/**
 		 * Prepares a new cookie
 		 *
 		 * @param string name the name of the cookie which is also the key for future accesses via `_COOKIE[...]`
 		 */
-		public Cookie(string name, Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim)
-			:base(cookieShim, sessionShim, serverShim)
+		public Cookie(string name, PhpInstance _phpInstance)
 		{
 			this.name = name;
 			this.value = null;
@@ -64,6 +69,8 @@ namespace Delight.Cookie
 			this.httpOnly = true;
 			this.secureOnly = false;
 			this.sameSiteRestriction = SAME_SITE_RESTRICTION_LAX;
+
+			PhpInstance = _phpInstance;
 		}
 
 		/**
@@ -302,7 +309,7 @@ namespace Delight.Cookie
 
 		Cookie Clone()
 		{
-			return new Cookie(this.name, _COOKIE, _SESSION, _SERVER)
+			return new Cookie(this.name, PhpInstance)
 			{
 				domain = this.domain,
 				expiryTime = this.expiryTime,
@@ -327,7 +334,7 @@ namespace Delight.Cookie
 		 */
 		public bool deleteAndUnset()
 		{
-			unset(_COOKIE, this.name);
+			_COOKIE.Unset(this.name);
 
 			return this.delete();
 		}
@@ -397,7 +404,7 @@ namespace Delight.Cookie
 
 			var forceShowExpiry = false;
 
-			if (is_null(value) || value == "") {
+			if (Php.is_null(value) || value == "") {
 				value = "deleted";
 				expiryTime = 0;
 				forceShowExpiry = true;
@@ -407,22 +414,22 @@ namespace Delight.Cookie
 			var expiryTimeStr = formatExpiryTime(expiryTime, forceShowExpiry);
 
 			//var headerStr = HEADER_PREFIX + name + "=" + urlencode(value);
-			var headerStr = name + "=" + urlencode(value);
+			var headerStr = name + "=" + Php.urlencode(value);
 
-			if (!is_null(expiryTimeStr)) {
+			if (!Php.is_null(expiryTimeStr)) {
 				headerStr += "; expires=" + expiryTimeStr;
 			}
 
 			// The `Max-Age` property is supported on PHP 5.5+ only (https://bugs.php.net/bug.php?id=23955).
-				if (!is_null(maxAgeStr)) {
+				if (!Php.is_null(maxAgeStr)) {
 					headerStr += "; Max-Age=" + maxAgeStr;
 				}
 
-			if (!empty(path)) {
+			if (!Php.empty(path)) {
 				headerStr+= "; path="+path;
 			}
 
-			if (!empty(domain)) {
+			if (!Php.empty(domain)) {
 				headerStr+= "; domain="+domain;
 			}
 
@@ -437,7 +444,7 @@ namespace Delight.Cookie
 			if (sameSiteRestriction == SAME_SITE_RESTRICTION_NONE) {
 				// if the "secure" attribute is missing
 				if (!secureOnly) {
-					trigger_error("When the \"SameSite\" attribute is set to \"None\", the \"secure\" attribute should be set as well", eErrorLevel.E_USER_WARNING);
+					Php.trigger_error("When the \"SameSite\" attribute is set to \"None\", the \"secure\" attribute should be set as well", Php.eErrorLevel.E_USER_WARNING);
 				}
 
 				headerStr+= "; SameSite=None";
@@ -458,9 +465,9 @@ namespace Delight.Cookie
 		 * @param string cookieHeader the cookie header to parse
 		 * @return \Delight\Cookie\Cookie|null the cookie instance or `null`
 		 */
-		public static Cookie parse(Shim.Shimmed_Full shim, string cookieHeader)
+		public static Cookie parse(PhpInstance _phpInstance, string cookieHeader)
 		{
-			if (empty(cookieHeader))
+			if (Php.empty(cookieHeader))
 			{
 				return null;
 			}
@@ -473,10 +480,10 @@ namespace Delight.Cookie
 			var cookiepair = kvps.First().Split('=').Select(S => S.Trim()).ToArray();
 			kvps.RemoveAt(0);
 
-			var cookie = new Cookie(cookiepair[0], shim._COOKIE, shim._SESSION, shim._SERVER);
+			var cookie = new Cookie(cookiepair[0], _phpInstance);
 			cookie.setPath(null);
 			cookie.setHttpOnly(false);
-			cookie.setValue(urldecode(cookiepair[1]));
+			cookie.setValue(Php.urldecode(cookiepair[1]));
 			cookie.setSameSiteRestriction(null);
 
 			if (kvps.Any()) 
@@ -485,18 +492,18 @@ namespace Delight.Cookie
 
 				foreach (var attribute in attributes) 
 				{
-					if (strcasecmp(attribute, "HttpOnly") == 0)
+					if (Php.strcasecmp(attribute, "HttpOnly") == 0)
 						cookie.setHttpOnly(true);
-					else if(strcasecmp(attribute, "Secure") == 0)
+					else if(Php.strcasecmp(attribute, "Secure") == 0)
 						cookie.setSecureOnly(true);
-					else if(stripos(attribute, "Expires=") == 0)
-						cookie.setExpiryTime(DateTime.Parse(substr(attribute, 8)));
-					else if(stripos(attribute, "Domain=") == 0)
-						cookie.setDomain(substr(attribute, 7));
-					else if(stripos(attribute, "Path=") == 0) 
-						cookie.setPath(substr(attribute, 5));
-					else if(stripos(attribute, "SameSite=") == 0) 
-						cookie.setSameSiteRestriction(substr(attribute, 9));
+					else if(Php.stripos(attribute, "Expires=") == 0)
+						cookie.setExpiryTime(DateTime.Parse(Php.substr(attribute, 8)));
+					else if(Php.stripos(attribute, "Domain=") == 0)
+						cookie.setDomain(Php.substr(attribute, 7));
+					else if(Php.stripos(attribute, "Path=") == 0) 
+						cookie.setPath(Php.substr(attribute, 5));
+					else if(Php.stripos(attribute, "SameSite=") == 0) 
+						cookie.setSameSiteRestriction(Php.substr(attribute, 9));
 				}
 			}
 
@@ -511,7 +518,7 @@ namespace Delight.Cookie
 		 */
 		public bool exists(string name) 
 		{
-			return isset(_COOKIE, name);
+			return Php.isset(_COOKIE, name);
 		}
 
 		/**
@@ -522,8 +529,8 @@ namespace Delight.Cookie
 		 * @return mixed the value from the requested cookie or the default value
 		 */
 		public string get(string name, string defaultValue = null) {
-			if (isset(_COOKIE, name)) {
-				return _COOKIE[name].getValue();
+			if (Php.isset(_COOKIE, name)) {
+				return _COOKIE.Get(name).getValue();
 			}
 			else {
 				return defaultValue;
@@ -544,7 +551,7 @@ namespace Delight.Cookie
 		}
 
 		private static bool isExpiryTimeValid(int expiryTime) {
-			return is_numeric(expiryTime) || is_null(expiryTime) || is_bool(expiryTime);
+			return Php.is_numeric(expiryTime) || Php.is_null(expiryTime) || Php.is_bool(expiryTime);
 		}
 
 		private static int calculateMaxAge(int expiryTime) {
@@ -552,7 +559,7 @@ namespace Delight.Cookie
 				return 0;
 			}
 			else {
-				var maxAge = expiryTime - time();
+				var maxAge = expiryTime - Php.time();
 
 					if (maxAge < 0) {
 						maxAge = 0;
@@ -568,7 +575,7 @@ namespace Delight.Cookie
 					expiryTime = 1;
 				}
 
-				return gmdate("D, d-M-Y H:i:s T", expiryTime);
+				return Php.gmdate("D, d-M-Y H:i:s T", expiryTime);
 			}
 			else {
 				return null;
@@ -593,13 +600,13 @@ namespace Delight.Cookie
 			}
 
 			// if the provided domain is actually an IP address
-			if (filter_var(domain, FILTER.FILTER_VALIDATE_IP) != false) {
+			if (Php.filter_var(domain, Php.FILTER.FILTER_VALIDATE_IP) != false) {
 				// let the cookie be valid for the current host
 				return null;
 			}
 
 			// for local hostnames (which either have no dot at all or a leading dot only)
-			if (strpos(domain, ".") == -1 || strrpos(domain, ".") == 0) {
+			if (Php.strpos(domain, ".") == -1 || Php.strrpos(domain, ".") == 0) {
 				// let the cookie be valid for the current host while ensuring maximum compatibility
 				return null;
 			}
@@ -619,7 +626,7 @@ namespace Delight.Cookie
 			//if (!headers_sent()) {
 			//	if (!empty(_header)) {
 			
-			header(_header, false);
+			PhpInstance.header(_header, false);
 			return true;
 			
 			//}

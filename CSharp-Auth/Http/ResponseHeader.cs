@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Delight.Shim;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace Delight.Http
 {
-	public class ResponseHeader : Shim.Shimmed_Full
+	public class ResponseHeader 
 	{
-		public ResponseHeader(Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim) 
-			: base(cookieShim, sessionShim, serverShim)
-		{ }
+		PhpInstance PhpInstance;
+		public ResponseHeader(PhpInstance phpInstance) 
+		{
+			PhpInstance = phpInstance;
+		}
 
 		/**
 		 * Returns the header with the specified name (and optional value prefix)
@@ -21,22 +24,22 @@ namespace Delight.Http
 		 */
 		public string get(string name, string valuePrefix = "")
 		{
-			if (empty(name))
+			if (Php.empty(name))
 			{
 				return null;
 			}
 
-			var nameLength = strlen(name);
-			var headers = headers_list();
+			var nameLength = Php.strlen(name);
+			var headers = PhpInstance.headers_list();
 
 			foreach (var header in headers) 
 			{
-				if (strcasecmp(substr(header, 0, nameLength + 1), (name + ":")) == 0) 
+				if (Php.strcasecmp(Php.substr(header, 0, nameLength + 1), (name + ":")) == 0) 
 				{
-					var headerValue = trim(substr(header, nameLength + 1), "\t ");
+					var headerValue = Php.trim(Php.substr(header, nameLength + 1), "\t ");
 
-					if (empty(valuePrefix) 
-						|| substr(headerValue, 0, strlen(valuePrefix)) == valuePrefix) 
+					if (Php.empty(valuePrefix) 
+						|| Php.substr(headerValue, 0, Php.strlen(valuePrefix)) == valuePrefix) 
 					{
 						return header;
 					}
@@ -57,11 +60,11 @@ namespace Delight.Http
 		{
 			var header = get(name, valuePrefix);
 
-			if (!empty(header))
+			if (!Php.empty(header))
 			{
-				var nameLength = strlen(name);
-				var headerValue = substr(header, nameLength + 1);
-				headerValue = trim(headerValue, "\t ");
+				var nameLength = Php.strlen(name);
+				var headerValue = Php.substr(header, nameLength + 1);
+				headerValue = Php.trim(headerValue, "\t ");
 
 				return headerValue;
 			}
@@ -81,7 +84,7 @@ namespace Delight.Http
 		 */
 		public void set(string name, string value)
 		{
-			header(name + ": " + value, true);
+			PhpInstance.header(name + ": " + value, true);
 		}
 
 		/**
@@ -94,7 +97,7 @@ namespace Delight.Http
 		 */
 		public void add(string name, string value)
 		{
-			header(name + ": " + value, false);
+			PhpInstance.header(name + ": " + value, false);
 		}
 
 		/**
@@ -106,7 +109,7 @@ namespace Delight.Http
 		 */
 		public bool remove(string name, string valuePrefix = "")
 		{
-			return take(this, name, valuePrefix) != null;
+			return take(PhpInstance, name, valuePrefix) != null;
 		}
 
 		/**
@@ -116,14 +119,14 @@ namespace Delight.Http
 		 * @param string $valuePrefix the optional string to match at the beginning of the header's value
 		 * @return string|null the header (if found) or `null`
 		 */
-		public static string take(Shim.Shimmed_Full shim, string name, string valuePrefix = "")
+		public static string take(PhpInstance shim, string name, string valuePrefix = "")
 		{
-			if (empty(name))
+			if (Php.empty(name))
 			{
 				return null;
 			}
 
-			var nameLength = strlen(name);
+			var nameLength = Php.strlen(name);
 			var headers = shim.headers_list();
 
 			string first = null;
@@ -131,11 +134,11 @@ namespace Delight.Http
 
 			foreach (var header in headers) 
 			{
-				if (strcasecmp(substr(header, 0, nameLength + 1), (name + ":")) == 0) 
+				if (Php.strcasecmp(Php.substr(header, 0, nameLength + 1), (name + ":")) == 0) 
 				{
-					var headerValue = trim(substr(header, nameLength + 1), "\t ");
+					var headerValue = Php.trim(Php.substr(header, nameLength + 1), "\t ");
 
-					if ((empty(valuePrefix) || substr(headerValue, 0, strlen(valuePrefix)) == valuePrefix) && first == null) 
+					if ((Php.empty(valuePrefix) || Php.substr(headerValue, 0, Php.strlen(valuePrefix)) == valuePrefix) && first == null) 
 					{
 						first = header;
 					}
@@ -168,13 +171,13 @@ namespace Delight.Http
 		 */
 		public string takeValue(string name, string valuePrefix = "")
 		{
-			var header = take(this, name, valuePrefix);
+			var header = take(PhpInstance, name, valuePrefix);
 
-			if (!empty(header))
+			if (!Php.empty(header))
 			{
-				var nameLength = strlen(name);
-				var headerValue = substr(header, nameLength + 1);
-				headerValue = trim(headerValue, "\t ");
+				var nameLength = Php.strlen(name);
+				var headerValue = Php.substr(header, nameLength + 1);
+				headerValue = Php.trim(headerValue, "\t ");
 
 				return headerValue;
 			}

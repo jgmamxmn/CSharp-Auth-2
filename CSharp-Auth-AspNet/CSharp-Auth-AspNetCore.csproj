@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -9,10 +9,11 @@
     <Title>CSharp-Auth-AspNetCore</Title>
     <Authors>Maximon Ltd.</Authors>
     <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
-  </PropertyGroup>
+  <version>1.0.2</version>
+  <Description>Easy shims between CSharp-Auth emulated environment and AspNetCore server environment (specifically, synchronizes the cookies data)</Description></PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharp-Auth" Version="1.0.1" />
+    <PackageReference Include="CSharp-Auth" Version="1.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
   </ItemGroup>
 

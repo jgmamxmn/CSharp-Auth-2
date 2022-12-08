@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Delight.Auth;
+using Delight.Shim;
 
 namespace Delight.Db
 {
 
 	/** Individual measurement of a profiler that monitors performance */
-	public abstract class Measurement : Delight.Shim.Shimmed_PHPOnly
+	public abstract class Measurement
 	{
 
 		/**
@@ -38,7 +39,7 @@ namespace Delight.Db
 		 *
 		 * @return array
 		 */
-		public abstract List<Shim.Shimmed_PHPOnly.debug_backtrace_param> getTrace();
+		public abstract List<Php.debug_backtrace_param> getTrace();
 
 	}
 }

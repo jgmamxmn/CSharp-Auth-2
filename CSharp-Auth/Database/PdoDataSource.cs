@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Delight.Auth;
+using Delight.Shim;
 
 namespace Delight.Db
 {
@@ -173,14 +174,14 @@ namespace Delight.Db
 			var components = new List<string>();
 			string _hostname;
 
-			if (isset(this.hostname)) {
+			if (Php.isset(this.hostname)) {
 				if (this.driverName != DRIVER_NAME_ORACLE) {
 					_hostname = this.hostname;
 
 					// if we"re trying to connect to a local database
 					if (this.hostname == HOST_LOOPBACK_NAME) {
 						// if we"re using a non-standard port
-						if (isset(this.port) && this.port != suggestPortFromDriverName(this.driverName)) {
+						if (Php.isset(this.port) && this.port != suggestPortFromDriverName(this.driverName)) {
 							// force usage of TCP over UNIX sockets for the port change to take effect
 							_hostname = HOST_LOOPBACK_IP;
 						}
@@ -190,39 +191,39 @@ namespace Delight.Db
 				}
 			}
 
-			if (isset(this.port)) {
+			if (Php.isset(this.port)) {
 				if (this.driverName != DRIVER_NAME_ORACLE) {
 					components.Add("port=" + this.port);
 				}
 			}
 
-			if (isset(this.unixSocket)) {
+			if (Php.isset(this.unixSocket)) {
 				components.Add("unix_socket=" + this.unixSocket);
 			}
 
-			if (isset(this.memory)) {
+			if (Php.isset(this.memory)) {
 				if (this.memory == true) {
 					components.Add(":memory:");
 				}
 			}
 
-			if (isset(this.filePath)) {
+			if (Php.isset(this.filePath)) {
 				components.Add(this.filePath);
 			}
 
-			if (isset(this.databaseName)) {
+			if (Php.isset(this.databaseName)) {
 				if (this.driverName == DRIVER_NAME_ORACLE) {
 					var oracleLocation = new List<string>();
 
-					if (isset(this.hostname)) {
+					if (Php.isset(this.hostname)) {
 						oracleLocation.Add(this.hostname);
 					}
-					if (isset(this.port)) {
+					if (Php.isset(this.port)) {
 						oracleLocation.Add(this.port?.ToString() ?? "");
 					}
 
-					if (count(oracleLocation) > 0) {
-						components.Add("dbname=//" + implode(":", oracleLocation) + "/" + this.databaseName);
+					if (Php.count(oracleLocation) > 0) {
+						components.Add("dbname=//" + Php.implode(":", oracleLocation) + "/" + this.databaseName);
 					}
 					else {
 						components.Add("dbname=" + this.databaseName);
@@ -233,7 +234,7 @@ namespace Delight.Db
 				}
 			}
 
-			if (isset(this.charset)) {
+			if (Php.isset(this.charset)) {
 				if (this.driverName == DRIVER_NAME_POSTGRESQL) {
 					components.Add("client_encoding=" + this.charset);
 				}
@@ -242,15 +243,15 @@ namespace Delight.Db
 				}
 			}
 
-			if (isset(this.username)) {
+			if (Php.isset(this.username)) {
 				components.Add("user=" + this.username);
 			}
 
-			if (isset(this.password)) {
+			if (Php.isset(this.password)) {
 				components.Add("password=" + this.password);
 			}
 
-			var dsnStr = this.driverName + ":" + implode(";", components);
+			var dsnStr = this.driverName + ":" + Php.implode(";", components);
 
 			return new PdoDsn(dsnStr, this.username, this.password);
 		}

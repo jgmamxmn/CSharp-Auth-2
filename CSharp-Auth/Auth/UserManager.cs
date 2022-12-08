@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Delight.Db;
+using Delight.Shim;
 
 /*
  * PHP-Auth (https://github.com/delight-im/PHP-Auth)
@@ -18,9 +19,14 @@ namespace Delight.Auth
 	 *
 	 * @internal
 	 */
-	abstract public class UserManager : Delight.Shim.Shimmed_Full {
+	abstract public class UserManager {
 
 		public delegate void DgtConfirmationEmail(string selector, string token);
+
+		public PhpInstance PhpInstance;
+		public _COOKIE _COOKIE => PhpInstance._COOKIE;
+		public _SESSION _SESSION => PhpInstance._SESSION;
+		public _SERVER _SERVER => PhpInstance._SERVER;
 
 
 		/** @var PdoDatabase the database connection to operate on */
@@ -40,10 +46,10 @@ namespace Delight.Auth
 		 */
 		public static string createRandomString(int maxLength = 24) {
 			// calculate how many bytes of randomness we need for the specified string length
-			var bytes = floor(maxLength / 4.0) * 3;
+			var bytes = Php.floor(maxLength / 4.0) * 3;
 
 			// get random data
-			var data = openssl_random_pseudo_bytes(bytes);
+			var data = Php.openssl_random_pseudo_bytes(bytes);
 
 			// return the Base64-encoded result
 			return Base64.encodeUrlSafe(data);
@@ -55,9 +61,12 @@ namespace Delight.Auth
 		 * @param string|null dbSchema (optional) the schema name for all database tables used by this component
 		 */
 		protected UserManager(PdoDatabase _databaseConnection, string _dbTablePrefix, string _dbSchema,
-			Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim)
-			: base(cookieShim, sessionShim, serverShim)
+			PhpInstance _phpInstance)
+			//Shim._COOKIE cookieShim, Shim._SESSION sessionShim, Shim._SERVER serverShim)
+			//: base(cookieShim, sessionShim, serverShim)
 		{
+			PhpInstance = _phpInstance;
+
 			/*if (databaseConnection instanceof PdoDatabase) {
 				this.db = databaseConnection;
 			}
@@ -111,12 +120,12 @@ namespace Delight.Auth
 		protected int createUserInternal(bool requireUniqueUsername, string email, string password, string username = null, 
 			DgtConfirmationEmail callback = null)
 		{
-			ignore_user_abort(true);
+			Php.ignore_user_abort(true);
 
 			email = validateEmailAddress(email);
 			password = validatePassword(password);
 
-			username = isset(username) ? trim(username) : null;
+			username = Php.isset(username) ? Php.trim(username) : null;
 
 			// if the supplied username is the empty string or has consisted of whitespace only
 			if (username == "") {
@@ -142,8 +151,8 @@ namespace Delight.Auth
 				}
 			}
 
-			password = password_hash(password, PASSWORD_ALGO.PASSWORD_DEFAULT);
-			var verified = is_callable(callback) ? 0 : 1;
+			password = Php.password_hash(password, Php.PASSWORD_ALGO.PASSWORD_DEFAULT);
+			var verified = Php.is_callable(callback) ? 0 : 1;
 
 			int newUserId = -1;
 			try {
@@ -156,7 +165,7 @@ namespace Delight.Auth
 						{ "password" , password },
 						{ "username" , username },
 						{ "verified" , verified },
-						{ "registered" , time() }
+						{ "registered" , Php.time() }
 					}
 					, "id", out object objNewUserId
 				);
@@ -188,7 +197,7 @@ namespace Delight.Auth
 		 * @throws AuthError if an internal problem occurred (do *not* catch)
 		 */
 		protected void updatePasswordInternal(int userId, string newPassword) {
-			newPassword = password_hash(newPassword, PASSWORD_ALGO.PASSWORD_DEFAULT);
+			newPassword = Php.password_hash(newPassword, Php.PASSWORD_ALGO.PASSWORD_DEFAULT);
 
 			try {
 				var affected = this.db.update(
@@ -224,7 +233,7 @@ namespace Delight.Auth
 		 */
 		protected virtual void onLoginSuccessful(int userId, string email, string username, Status status, Roles roles, int forceLogout, bool remembered) {
 			// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
-			Delight.Cookie.Session.regenerate(this, true);
+			Delight.Cookie.Session.regenerate(PhpInstance, true);
 
 			// save the user data in the session variables maintained by this library
 			_SESSION.SESSION_FIELD_LOGGED_IN = true;
@@ -235,7 +244,7 @@ namespace Delight.Auth
 			_SESSION.SESSION_FIELD_ROLES = roles;
 			_SESSION.SESSION_FIELD_FORCE_LOGOUT = forceLogout;
 			_SESSION.SESSION_FIELD_REMEMBERED = remembered;
-			_SESSION.SESSION_FIELD_LAST_RESYNC = time();
+			_SESSION.SESSION_FIELD_LAST_RESYNC = Php.time();
 		}
 
 		/**
@@ -253,7 +262,7 @@ namespace Delight.Auth
 		protected UserDataRow getUserDataByUsername(string username, string[] requestedColumns) {
 			List<DatabaseResultRow> users=null;
 			try {
-				var projection = implode(", ", requestedColumns);
+				var projection = Php.implode(", ", requestedColumns);
 
 				users = this.db.select(
 					"SELECT " + projection + " FROM " + this.makeTableName("users") + " WHERE username = @username LIMIT 2 OFFSET 0",
@@ -265,11 +274,11 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			if (empty(users)) {
+			if (Php.empty(users)) {
 				throw new UnknownUsernameException();
 			}
 			else {
-				if (count(users) == 1) {
+				if (Php.count(users) == 1) {
 					return new UserDataRow(users[0]);
 				}
 			else {
@@ -289,9 +298,9 @@ namespace Delight.Auth
 			if (string.IsNullOrEmpty(email))
 				throw new InvalidEmailException();
 
-			email = trim(email);
+			email = Php.trim(email);
 
-			if (!filter_var(email, Shim.Shimmed_PHPOnly.FILTER.FILTER_VALIDATE_EMAIL)) {
+			if (!Php.filter_var(email, Php.FILTER.FILTER_VALIDATE_EMAIL)) {
 				throw new InvalidEmailException();
 			}
 
@@ -310,9 +319,9 @@ namespace Delight.Auth
 				throw new InvalidPasswordException();
 			}
 
-			password = trim(password);
+			password = Php.trim(password);
 
-			if (strlen(password) < 1) {
+			if (Php.strlen(password) < 1) {
 				throw new InvalidPasswordException();
 			}
 
@@ -338,8 +347,8 @@ namespace Delight.Auth
 		protected void createConfirmationRequest(int userId, string email, DgtConfirmationEmail callback) {
 			var selector = createRandomString(16);
 			var token = createRandomString(16);
-			var tokenHashed = password_hash(token, PASSWORD_ALGO.PASSWORD_DEFAULT);
-			var expires = time() + 60 * 60 * 24;
+			var tokenHashed = Php.password_hash(token, Php.PASSWORD_ALGO.PASSWORD_DEFAULT);
+			var expires = Php.time() + 60 * 60 * 24;
 
 			try {
 				this.db.insert(
@@ -358,7 +367,7 @@ namespace Delight.Auth
 				throw new DatabaseError(e.Message);
 			}
 
-			if (is_callable(callback)) {
+			if (Php.is_callable(callback)) {
 				callback(selector, token);
 			}
 		else {
@@ -376,7 +385,7 @@ namespace Delight.Auth
 		virtual protected void deleteRememberDirectiveForUserById(int userId, string selector = null) {
 			var whereMappings = new Dictionary<string, object>();
 
-			if (isset(selector)) {
+			if (Php.isset(selector)) {
 				whereMappings.Add("selector",selector);
 			}
 
@@ -418,12 +427,12 @@ namespace Delight.Auth
 		protected string[] makeTableNameComponents(string name) {
 			var components = new List<string>();
 
-			if (!empty(this.dbSchema)) {
+			if (!Php.empty(this.dbSchema)) {
 				components.Add(this.dbSchema);
 			}
 
-			if (!empty(name)) {
-				if (!empty(this.dbTablePrefix)) {
+			if (!Php.empty(name)) {
+				if (!Php.empty(this.dbTablePrefix)) {
 					components.Add(this.dbTablePrefix + name);
 				}
 				else {
@@ -447,7 +456,7 @@ namespace Delight.Auth
 		protected string makeTableName(string name) {
 			var components = this.makeTableNameComponents(name);
 
-			return implode(".", components);
+			return Php.implode(".", components);
 		}
 
 	}
