@@ -12,8 +12,16 @@
 	  <Company>Maximon Ltd.</Company>
 	  <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
 	  <Description>An authentication library based on Delight.IM's PHP-Auth</Description>
-	  <Copyright>(C) Copyright Maximon Ltd., Dec 2022. Distributed under MIT license.</Copyright>
-	  <Version>1.0.4</Version>
+	  <Copyright>(C) Copyright Maximon Ltd., 2024. Distributed under MIT license.</Copyright>
+	  <Version>1.0.18</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

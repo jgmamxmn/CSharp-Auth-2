@@ -74,11 +74,19 @@ namespace NuGetPushTool
 			}
 
 			// Enviro variable
-			string ApiKey = Environment.GetEnvironmentVariable("GITHUB_NUGET_KEY");
+			string ApiKey = null;
+			if (File.Exists(@"E:\Docs\OneDrive\Maximon\Two-factor authentication rescue keys\Github_Nuget_key.txt"))
+				ApiKey = File.ReadAllText(@"E:\Docs\OneDrive\Maximon\Two-factor authentication rescue keys\Github_Nuget_key.txt").Trim();
+			if(string.IsNullOrEmpty(ApiKey))
+				ApiKey = Environment.GetEnvironmentVariable("GITHUB_NUGET_KEY");
 			if(string.IsNullOrEmpty(ApiKey))
 			{
 				Console.WriteLine("No API key found. API key should be set in the system environmental variable GITHUB_NUGET_KEY");
 				return;
+			}
+			else
+			{
+				//Console.WriteLine($"API key: '{ApiKey}'.");
 			}
 
 			// Check if local NuGet package exists
@@ -93,7 +101,9 @@ namespace NuGetPushTool
 			}
 
 			// Execute
-			Process.Start("dotnet", $"nuget push \"{NuGetFile}\" --source \"github\" -k {ApiKey}");
+			var CommandLineArgs = $"nuget push \"{NuGetFile}\" --source \"github\" -k {ApiKey}";
+			//Console.WriteLine("** Executing: dotnet " + CommandLineArgs);
+			Process.Start("dotnet", CommandLineArgs);
 
 			// Update the version number
 			// From my own experiments, it seems possible to overwrite the csproj file while it's open in VS

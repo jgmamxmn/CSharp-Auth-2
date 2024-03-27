@@ -95,11 +95,13 @@ namespace Delight.Shim.AspNetCore
 
 		public bool TryGetValue(string key, out Cookie.Cookie cookieEntry)
 		{
+			EnsureInitialized();
 			return ShadowCopy.TryGetValue(key, out cookieEntry);
 		}
 
 		public void Clear()
 		{
+			EnsureInitialized();
 			foreach (var toRemove in ShadowCopy)
 				Response.Cookies.Delete(toRemove.Value.getName());
 			ShadowCopy.Clear();
@@ -107,11 +109,13 @@ namespace Delight.Shim.AspNetCore
 
 		public Dictionary<string, Cookie.Cookie> GetLiveCollection()
 		{
+			EnsureInitialized();
 			return new Dictionary<string, Cookie.Cookie>(ShadowCopy);
 		}
 
 		public bool isset(string key)
 		{
+			EnsureInitialized();
 			return ShadowCopy.ContainsKey(key);
 		}
 	}

@@ -56,21 +56,42 @@ PDO.Disconnect();
 
 In practice, you'll be required to explicitly pass around SESSION, SERVER, and COOKIE objects all the goshdarn time. These are available as fields in the Auth object: Auth.\_SESSION, Auth.\_SERVER, and Auth.\_COOKIE.
 
-If you want to modify these values when the Auth object is created, you can use the CallbackToInitializeEnvironment parameter of Auth's constructor. For example:
+The best approach is to use Auth.AuthBuilder to establish a suitable environment. You can then daisychain its various methods to set up (as a minimum) the database connection details, the database table, and the client's remote IP address. For example:
 
 ```
-// ... initialize PDO and DB as above example ...
 
-var Auth = new Delight.Auth.Auth(DB,
-  CallbackToInitializeEnvironment: (_auth, shimCookie, shimSession, shimServer) =>
-  {
-    // Copy cookies from some other source
-    foreach(var ExistingCookie in CollectionOfExistingCookies)
-    {
-       shimCookie.set(ExistingCookie.name, ExistingCookie.value);
-    }
-  });
+using Delight.Auth;
+
+Auth auth = Auth.Create()
+	// Database info:
+	.SetDatabaseParams("127.0.0.1", 5432, "PostgresUser", "MyPostgresPassword123")
+	.SetDatabaseName("db")
+	// Request-related info:
+	.SetClientIp(request_defined_elsewhere.Context.IpAddress)
+	// ... could customize the cookie manager etc. here ...
+	// Done - build
+	.Build();
+
 ```
+
+If you are using an ASP.NET server, you can ease the process by also installing the CSharp-Auth-AspNet extension package and using it in the build query. This will automatically sync up Auth's cookies with the server request's cookies (which is important).
+
+```
+
+using Delight.Auth;
+using Delight.Shim.AspNetCore;
+
+Auth auth = Auth.Create()
+	// Database info:
+	.SetDatabaseParams("127.0.0.1", 5432, "PostgresUser", "MyPostgresPassword123")
+	.SetDatabaseName("db")
+	// Request-related info:
+	.SetEnvironment(myAspNetCoreHttpContext)
+	// Done - build
+	.Build();
+
+```
+
 
 ## License
 

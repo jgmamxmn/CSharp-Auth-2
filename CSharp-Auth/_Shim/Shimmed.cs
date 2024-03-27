@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using BCrypt.Net;
@@ -81,6 +82,7 @@ namespace Delight.Shim
 		public static bool is_null(object o) => (o is null);
 		public static bool is_numeric(int i) => true;
 		public static bool is_bool(int i) => false;
+		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		public static bool isset(object o)
 		{
 			if (o is null || o==null)
@@ -89,11 +91,8 @@ namespace Delight.Shim
 				return (!string.IsNullOrEmpty(s));
 			return true;
 		}
-		public static bool isset<ValType>(Dictionary<string, ValType> enumerable, string key) => enumerable.ContainsKey(key);
-		public static bool isset<ValType>(BasicDictionaryWrapped<string, ValType> enumerable, string key) => enumerable.Dict.ContainsKey(key);
 		public interface Issetable { bool isset(string key); }
 		public static bool isset(Issetable enumerable, string key) => enumerable.isset(key);
-		public static bool isset(Shim._SESSION s) => true;
 		public static bool is_callable(object o) => (o != null);
 		public static bool empty<T>(IEnumerable<T> en) => (!en?.Any()) ?? true;
 		public static int count<T>(IEnumerable<T> en) => en?.Count() ?? 0;

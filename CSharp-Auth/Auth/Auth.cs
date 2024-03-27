@@ -7,6 +7,7 @@ using System.Linq;
 using Delight.Shim;
 using System.Threading;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 /*
  * PHP-Auth (https://github.com/delight-im/PHP-Auth)
@@ -77,7 +78,7 @@ namespace Delight.Auth
 			bool? _throttling = null, int? _sessionResyncInterval = null)
 			: base(_databaseConnection, _dbTablePrefix, _dbSchema, _phpInstance)
 		{
-			this.ipAddress = !Php.empty(_clientIpAddress) ? _clientIpAddress : (Php.isset(_SERVER.REMOTE_ADDR) ? _SERVER.REMOTE_ADDR : null);
+			this.ipAddress = !Php.empty(_clientIpAddress) ? _clientIpAddress : (!string.IsNullOrEmpty(_SERVER.REMOTE_ADDR) ? _SERVER.REMOTE_ADDR : null);
 			this.throttling = _throttling ?? true;
 			this.sessionResyncInterval = _sessionResyncInterval ?? (60 * 5);
 			this.rememberCookieName = createRememberCookieName();
@@ -389,7 +390,7 @@ namespace Delight.Auth
 			// if the user is signed in
 			if (this.isLoggedIn()) {
 				// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-				if (!Php.isset(_SESSION.SESSION_FIELD_LAST_RESYNC)) {
+				if (_SESSION.SESSION_FIELD_LAST_RESYNC==null) {
 					_SESSION.SESSION_FIELD_LAST_RESYNC = 0;
 				}
 
@@ -411,7 +412,7 @@ namespace Delight.Auth
 					// if the user"s data has been found
 					if (!Php.empty(authoritativeData)) {
 						// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-						if (!Php.isset(_SESSION.SESSION_FIELD_FORCE_LOGOUT)) {
+						if (_SESSION.SESSION_FIELD_FORCE_LOGOUT == null) {
 							_SESSION.SESSION_FIELD_FORCE_LOGOUT = 0;
 						}
 
@@ -635,7 +636,7 @@ namespace Delight.Auth
 				var rememberDirectiveSelector = this.getRememberDirectiveSelector();
 
 				// if such a remember directive exists
-				if (Php.isset(rememberDirectiveSelector)) {
+				if (!string.IsNullOrEmpty(rememberDirectiveSelector)) {
 					// delete the local remember directive
 					this.deleteRememberDirectiveForUserById(
 						this.getUserId(),
@@ -674,7 +675,7 @@ namespace Delight.Auth
 			this.forceLogoutForUserById(this.getUserId());
 
 			// the following session field may not have been initialized for sessions that had already existed before the introduction of this feature
-			if (!Php.isset(_SESSION.SESSION_FIELD_FORCE_LOGOUT)) {
+			if (_SESSION.SESSION_FIELD_FORCE_LOGOUT == null) {
 				_SESSION.SESSION_FIELD_FORCE_LOGOUT = 0;
 			}
 
@@ -685,7 +686,7 @@ namespace Delight.Auth
 			Cookie.Session.regenerate(PhpInstance, true);
 
 			// if there had been an existing remember directive previously
-			if (Php.isset(previousRememberDirectiveExpiry)) {
+			if (previousRememberDirectiveExpiry!=-1) {
 				// restore the directive with the old expiry date but new credentials
 				this.createRememberDirective(
 					this.getUserId(),
@@ -786,7 +787,7 @@ namespace Delight.Auth
 
 			string content;
 
-			if (Php.isset(selector) && Php.isset(token)) {
+			if (!string.IsNullOrEmpty(selector) && !string.IsNullOrEmpty(token)) {
 				content = selector + COOKIE_CONTENT_SEPARATOR + token;
 			}
 			else {
@@ -810,7 +811,7 @@ namespace Delight.Auth
 			}
 
 			// if we"ve been deleting the cookie above
-			if (!Php.isset(selector) || !Php.isset(token)) {
+			if (string.IsNullOrEmpty(selector) || string.isn(token)) {
 				// attempt to delete a potential old cookie from versions v1.x.x to v6.x.x as well (requests a cookie to be written on the client)
 				var cookie = new Delight.Cookie.Cookie("auth_remember", PhpInstance);
 				cookie.setPath((!Php.empty(myParams.path)) ? myParams.path : "/");
@@ -1349,7 +1350,7 @@ namespace Delight.Auth
 				}
 
 				if (userData.verified ) {
-					if (!Php.isset(onBeforeSuccess) || (Php.is_callable(onBeforeSuccess) && onBeforeSuccess(userData.id) == true)) {
+					if ((!(onBeforeSuccess is object)) || onBeforeSuccess(userData.id)) {
 						this.onLoginSuccessful(userData.id, userData.email, userData.username, userData.status, userData.roles_mask, userData.force_logout, false);
 
 						if (rememberDuration != null) {
@@ -1361,10 +1362,10 @@ namespace Delight.Auth
 					else {
 						this.throttle(new[] { "attemptToLogin", this.getIpAddress() }, 4, (60 * 60), 5, false);
 
-						if (Php.isset(email)) {
+						if (!string.IsNullOrEmpty(email)) {
 							this.throttle(new[] { "attemptToLogin", "email", email }, 500, (60 * 60 * 24), simulated:false);
 						}
-						else if(Php.isset(username)) {
+						else if(!string.IsNullOrEmpty(username)) {
 							this.throttle(new[] { "attemptToLogin", "username", username }, 500, (60 * 60 * 24), simulated:false);
 						}
 
@@ -1378,10 +1379,10 @@ namespace Delight.Auth
 			else {
 				this.throttle(new[] { "attemptToLogin", this.getIpAddress() }, 4, (60 * 60), 5, false);
 
-				if (Php.isset(email)) {
+				if (!string.IsNullOrEmpty(email)) {
 					this.throttle(new[] { "attemptToLogin", "email", email }, 500, (60 * 60 * 24), simulated:false);
 				}
-				else if(Php.isset(username)) {
+				else if(!string.IsNullOrEmpty(username)) {
 					this.throttle(new[] { "attemptToLogin", "username", username }, 500, (60 * 60 * 24), simulated:false);
 				}
 
@@ -1774,8 +1775,14 @@ namespace Delight.Auth
 		 *
 		 * @return boolean whether the user is logged in or not
 		 */
+		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		public bool isLoggedIn() {
-			return Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_LOGGED_IN) && (_SESSION.SESSION_FIELD_LOGGED_IN is bool b && b == true);
+
+			var b = _SESSION?.SESSION_FIELD_LOGGED_IN;
+			if (b == true)
+				return true;
+
+			return false;
 		}
 
 		/**
@@ -1792,14 +1799,8 @@ namespace Delight.Auth
 		 *
 		 * @return int the user ID
 		 */
-		public int getUserId() {
-			if (Php.isset(_SESSION) && (_SESSION.SESSION_FIELD_USER_ID is int ret)) {
-				return ret;
-			}
-			else {
-				return -1;
-			}
-		}
+		public int getUserId() 
+			=> _SESSION.SESSION_FIELD_USER_ID ?? -1;
 
 		/**
 		 * Shorthand/alias for {@see getUserId}
@@ -1816,12 +1817,7 @@ namespace Delight.Auth
 		 * @return string the email address
 		 */
 		public string getEmail() {
-			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_EMAIL)) {
-				return _SESSION.SESSION_FIELD_EMAIL as string;
-			}
-			else {
-				return null;
-			}
+			return _SESSION?.SESSION_FIELD_EMAIL;
 		}
 
 		/**
@@ -1829,28 +1825,16 @@ namespace Delight.Auth
 		 *
 		 * @return string the display name
 		 */
-		public string getUsername() {
-			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_USERNAME)) {
-				return _SESSION.SESSION_FIELD_USERNAME as string;
-			}
-			else {
-				return null;
-			}
-		}
+		public string getUsername()
+			=> _SESSION.SESSION_FIELD_USERNAME;
 
 		/**
 		 * Returns the currently signed-in user"s status by reading from the session
 		 *
 		 * @return int the status as one of the constants from the {@see Status} class
 		 */
-		public Status getStatus() {
-			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_STATUS)) {
-				return (Status)_SESSION.SESSION_FIELD_STATUS;
-			}
-			else {
-				return Status.Undefined;
-			}
-		}
+		public Status getStatus() 
+			=> _SESSION.SESSION_FIELD_STATUS?? Status.Undefined;
 
 		/**
 		 * Returns whether the currently signed-in user is in "normal" state
@@ -1934,11 +1918,12 @@ namespace Delight.Auth
 		 */
 		public bool hasRole(Roles role) {
 
-			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_ROLES)) {
+			if (_SESSION?.SESSION_FIELD_ROLES is Roles R)
+			{ 
 				return
 				(
 					(
-						_SESSION.SESSION_FIELD_ROLES & role
+						R & role
 					)
 					== role
 				);
@@ -2002,14 +1987,8 @@ namespace Delight.Auth
 		 *
 		 * @return bool whether they have been remembered
 		 */
-		public bool isRemembered() {
-			if (Php.isset(_SESSION) && Php.isset(_SESSION.SESSION_FIELD_REMEMBERED)) {
-				return (bool)_SESSION.SESSION_FIELD_REMEMBERED;
-			}
-			else {
-				return false;
-			}
-		}
+		public bool isRemembered()
+			=> _SESSION?.SESSION_FIELD_REMEMBERED ?? false;
 
 		/**
 		 * Returns the user"s current IP address
@@ -2249,7 +2228,7 @@ namespace Delight.Auth
 				var existingSelector = this.getRememberDirectiveSelector();
 
 				// if there is currently a remember directive whose selector we have just retrieved
-				if (Php.isset(existingSelector)) {
+				if (!string.IsNullOrEmpty(existingSelector)) {
 					// fetch the expiry date for the given selector
 					var existingExpiry = this.db.selectValue(
 						"SELECT expires FROM " + this.makeTableName("users_remembered") + " WHERE selector = @selector AND user = @user",
@@ -2261,7 +2240,7 @@ namespace Delight.Auth
 					);
 
 					// if an expiration date has been found
-					if (Php.isset(existingExpiry)) {
+					if (existingExpiry is object) { // If no results, db.selectValue will return null
 						// return the date
 						return Shim.MasterCaster.GetInt(existingExpiry);
 					}
