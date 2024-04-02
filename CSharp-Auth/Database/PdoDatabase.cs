@@ -49,7 +49,7 @@ namespace Delight.Db
 	}*/
 
 	/** Database access using PHP"s built-in PDO */
-	public sealed class PdoDatabase : Database 
+	public sealed class PdoDatabase : Database, IDisposable 
 	{
 
 		/** @var array|null the old connection attributes to restore during denormalization */
@@ -58,6 +58,7 @@ namespace Delight.Db
 		private Dictionary<ePDO, object> attributes;
 		/** @var PDO|null the connection that this public class operates on (may be lazily loaded) */
 		public Shim.PDO pdo { get; private set; }
+  		public bool MustDisposePdoInstance = false;
 		/** @var PdoDsn|null the PDO-specific DSN that may be used to establish the connection */
 		private PdoDsn dsn;
 		/** @var string|null the name of the driver that is used for the current connection (may be lazily loaded) */
@@ -754,6 +755,32 @@ namespace Delight.Db
 				// return these as extracted by the callback
 				return results;
 			}
+		}
+
+  		protected bool disposedValue=false;
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					if(MustDisposePdoInstance && (pdo is object))
+					{
+						pdo.Dispose();
+						pdo = null;
+					}
+				}
+
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
 		}
 
 	}
