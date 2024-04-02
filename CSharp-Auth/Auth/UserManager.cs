@@ -19,7 +19,7 @@ namespace Delight.Auth
 	 *
 	 * @internal
 	 */
-	abstract public class UserManager {
+	abstract public class UserManager : IDisposable {
 
 		public delegate void DgtConfirmationEmail(string selector, string token);
 
@@ -31,6 +31,7 @@ namespace Delight.Auth
 
 		/** @var PdoDatabase the database connection to operate on */
 		public PdoDatabase db { get; protected set; }
+  		public bool MustDisposePdoDatabase = false;
 		/** @var string|null the schema name for all database tables used by this component */
 		protected string dbSchema;
 		/** @var string the prefix for the names of all database tables used by this component */
@@ -457,6 +458,34 @@ namespace Delight.Auth
 			var components = this.makeTableNameComponents(name);
 
 			return Php.implode(".", components);
+		}
+
+
+
+  		protected bool disposedValue=false;
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					if(MustDisposePdoDatabase && (db is object))
+					{
+						db.Dispose();
+						db = null;
+					}
+				}
+
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
 		}
 
 	}
