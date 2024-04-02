@@ -369,9 +369,7 @@ namespace Delight.Db
 			}
 
 			// if a performance profiler has been defined
-			if (Php.isset(this.profiler)) {
-				this.profiler.beginMeasurement();
-			}
+			this.profiler?.beginMeasurement();
 
 			int affectedRows = 0;
 			/** @var PDOStatement stmt */
@@ -399,10 +397,7 @@ namespace Delight.Db
 			//} catch (Exception e) { returnedColumn = null; ErrorHandler.rethrow(e); }
 
 			// if a performance profiler has been defined
-			if (Php.isset(this.profiler)) {
-				this.profiler.endMeasurement(statement, bindValues);
-			}
-
+			this.profiler?.endMeasurement(statement, bindValues);
 
 			this.denormalizeConnection();
 
@@ -641,9 +636,9 @@ namespace Delight.Db
 		 */
 		private void configureConnection(Dictionary<ePDO,object> newAttributes = null, Dictionary<ePDO,object> oldAttributes = null) {
 			// if a connection is available
-			if (Php.isset(this.pdo)) {
+			if (this.pdo is object) {
 				// if there are attributes that need to be applied
-				if (Php.isset(newAttributes)) {
+				if (newAttributes is object) {
 					// get the keys and values of the attributes to apply
 					foreach (var kvp in newAttributes) {
 
@@ -652,7 +647,7 @@ namespace Delight.Db
 						object oldValue = null;
 
 						// if the old state of the connection must be preserved
-						if (Php.isset(oldAttributes)) {
+						if (oldAttributes is object) {
 							// retrieve the old value for this attribute
 							try {
 								oldValue = this.pdo.getAttribute(key);
@@ -663,7 +658,7 @@ namespace Delight.Db
 							}
 
 							// if an old value has been found
-							if (Php.isset(oldValue)) {
+							if (oldValue!=null) {
 								// if the old value differs from the new value that we"re going to set
 								if (oldValue != newValue) {
 									// save the old value so that we"re able to restore it later
@@ -677,7 +672,7 @@ namespace Delight.Db
 					}
 
 					// if the old state of the connection doesn"t need to be preserved
-					if (!Php.isset(oldAttributes)) {
+					if (!(oldAttributes is object)) {
 						// we"re done updating attributes for this connection once and for all
 						newAttributes = null;
 					}
@@ -710,9 +705,7 @@ namespace Delight.Db
 			//}catch (Exception e) {	ErrorHandler.rethrow(e);}
 
 			// if a performance profiler has been defined
-			if (Php.isset(this.profiler)) {
-				this.profiler.beginMeasurement();
-			}
+			this.profiler?.beginMeasurement();
 
 			/** @var PDOStatement stmt */
 
@@ -722,9 +715,7 @@ namespace Delight.Db
 			//}	catch (Exception e) {	ErrorHandler.rethrow(e);		}
 
 			// if a performance profiler has been defined
-			if (Php.isset(this.profiler)) {
-				this.profiler.endMeasurement(query, bindValues, 1);
-			}
+			this.profiler?.endMeasurement(query, bindValues, 1);
 
 			// fetch the desired results from the result set via the supplied callback
 			var results = callback(stmt);

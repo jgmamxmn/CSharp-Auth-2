@@ -125,7 +125,7 @@ namespace Delight.Auth
 			email = validateEmailAddress(email);
 			password = validatePassword(password);
 
-			username = Php.isset(username) ? Php.trim(username) : null;
+			username = !string.IsNullOrEmpty(username) ? Php.trim(username) : null;
 
 			// if the supplied username is the empty string or has consisted of whitespace only
 			if (username == "") {
@@ -385,7 +385,7 @@ namespace Delight.Auth
 		virtual protected void deleteRememberDirectiveForUserById(int userId, string selector = null) {
 			var whereMappings = new Dictionary<string, object>();
 
-			if (Php.isset(selector)) {
+			if (!string.IsNullOrEmpty(selector)) {
 				whereMappings.Add("selector",selector);
 			}
 

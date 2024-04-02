@@ -24,7 +24,7 @@ namespace Delight.Cookie
 			var originalCookieHeader = Delight.Http.ResponseHeader.take(shim, "Set-Cookie", shim.session_name() + "=");
 
 			// if a cookie header has been found
-			if (Php.isset(originalCookieHeader))
+			if (!string.IsNullOrEmpty(originalCookieHeader))
 			{
 				// parse it into a cookie instance
 				var parsedCookie = Cookie.parse(shim, originalCookieHeader);

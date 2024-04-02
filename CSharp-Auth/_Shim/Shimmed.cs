@@ -82,15 +82,6 @@ namespace Delight.Shim
 		public static bool is_null(object o) => (o is null);
 		public static bool is_numeric(int i) => true;
 		public static bool is_bool(int i) => false;
-		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-		public static bool isset(object o)
-		{
-			if (o is null || o==null)
-				return false;
-			else if (o is string s)
-				return (!string.IsNullOrEmpty(s));
-			return true;
-		}
 		public interface Issetable { bool isset(string key); }
 		public static bool isset(Issetable enumerable, string key) => enumerable.isset(key);
 		public static bool is_callable(object o) => (o != null);

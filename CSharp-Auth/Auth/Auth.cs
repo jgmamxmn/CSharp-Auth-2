@@ -811,7 +811,7 @@ namespace Delight.Auth
 			}
 
 			// if we"ve been deleting the cookie above
-			if (string.IsNullOrEmpty(selector) || string.isn(token)) {
+			if (string.IsNullOrEmpty(selector) || string.IsNullOrEmpty(token)) {
 				// attempt to delete a potential old cookie from versions v1.x.x to v6.x.x as well (requests a cookie to be written on the client)
 				var cookie = new Delight.Cookie.Cookie("auth_remember", PhpInstance);
 				cookie.setPath((!Php.empty(myParams.path)) ? myParams.path : "/");

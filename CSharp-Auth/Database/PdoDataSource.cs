@@ -174,14 +174,14 @@ namespace Delight.Db
 			var components = new List<string>();
 			string _hostname;
 
-			if (Php.isset(this.hostname)) {
+			if (!string.IsNullOrEmpty(this.hostname)) {
 				if (this.driverName != DRIVER_NAME_ORACLE) {
 					_hostname = this.hostname;
 
 					// if we"re trying to connect to a local database
 					if (this.hostname == HOST_LOOPBACK_NAME) {
 						// if we"re using a non-standard port
-						if (Php.isset(this.port) && this.port != suggestPortFromDriverName(this.driverName)) {
+						if (this.port is int thisPort2 && thisPort2 != suggestPortFromDriverName(this.driverName)) {
 							// force usage of TCP over UNIX sockets for the port change to take effect
 							_hostname = HOST_LOOPBACK_IP;
 						}
@@ -191,35 +191,34 @@ namespace Delight.Db
 				}
 			}
 
-			if (Php.isset(this.port)) {
+			if (this.port is int thisPort1) {
 				if (this.driverName != DRIVER_NAME_ORACLE) {
-					components.Add("port=" + this.port);
+					components.Add("port=" + thisPort1);
 				}
 			}
 
-			if (Php.isset(this.unixSocket)) {
+			if (!string.IsNullOrEmpty(this.unixSocket)) {
 				components.Add("unix_socket=" + this.unixSocket);
 			}
 
-			if (Php.isset(this.memory)) {
-				if (this.memory == true) {
-					components.Add(":memory:");
-				}
+			if (this.memory==true) 
+			{
+				components.Add(":memory:");
 			}
 
-			if (Php.isset(this.filePath)) {
+			if (!string.IsNullOrEmpty(this.filePath)) {
 				components.Add(this.filePath);
 			}
 
-			if (Php.isset(this.databaseName)) {
+			if (!string.IsNullOrEmpty(this.databaseName)) {
 				if (this.driverName == DRIVER_NAME_ORACLE) {
 					var oracleLocation = new List<string>();
 
-					if (Php.isset(this.hostname)) {
+					if (!string.IsNullOrEmpty(this.hostname)) {
 						oracleLocation.Add(this.hostname);
 					}
-					if (Php.isset(this.port)) {
-						oracleLocation.Add(this.port?.ToString() ?? "");
+					if (this.port is int thisPort3) {
+						oracleLocation.Add(thisPort3.ToString() ?? "");
 					}
 
 					if (Php.count(oracleLocation) > 0) {
@@ -234,7 +233,7 @@ namespace Delight.Db
 				}
 			}
 
-			if (Php.isset(this.charset)) {
+			if (!string.IsNullOrEmpty(this.charset)) {
 				if (this.driverName == DRIVER_NAME_POSTGRESQL) {
 					components.Add("client_encoding=" + this.charset);
 				}
@@ -243,11 +242,11 @@ namespace Delight.Db
 				}
 			}
 
-			if (Php.isset(this.username)) {
+			if (!string.IsNullOrEmpty(this.username)) {
 				components.Add("user=" + this.username);
 			}
 
-			if (Php.isset(this.password)) {
+			if (!string.IsNullOrEmpty(this.password)) {
 				components.Add("password=" + this.password);
 			}
 
