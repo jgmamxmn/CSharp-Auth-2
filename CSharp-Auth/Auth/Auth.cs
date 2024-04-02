@@ -35,8 +35,6 @@ namespace Delight.Auth
 
 		public delegate bool DgtOnBeforeSuccess(int user_id);
 
-
-
 		/**
 		 * @param PdoDatabase|PdoDsn|\
 		 * @param string|null ipAddress 
@@ -217,6 +215,7 @@ namespace Delight.Auth
 			/// <returns></returns>
 			public Auth Build()
 			{
+   				bool AuthMustDisposePdoDatabase = false;
 				// Guarantee that PdoDatabase exists
 				if (!(PdoDatabase is object))
 				{
@@ -237,13 +236,16 @@ namespace Delight.Auth
 						PdoDsn = new PdoDsn(_Dsn.ConnectionString, _Dsn.Username, _Dsn.Password);
 					}
 
+					bool PdoDatabaseMustDisposePdoInstance=false;
 					// Guarantee that PdoInstance exists (required to create PdoDatabase)
 					if (!(PdoInstance is object))
 					{
 						PdoInstance = new PDO(PdoDsn.getDsn(), PdoDsn.getUsername(), PdoDsn.getPassword());
+      						PdoDatabaseMustDisposePdoInstance=true;
 					}
 
 					PdoDatabase = new PdoDatabase(PdoInstance, PdoDsn);
+     					PdoDatabase.MustDisposePdoInstance = PdoDatabaseMustDisposePdoInstance;
 				}
 
 				// Php instance
@@ -254,6 +256,7 @@ namespace Delight.Auth
 
 				// Create Auth object
 				var Ret = new Auth(PdoDatabase, Inst, ClientIpAddress, DbTablePrefix, null, null, null);
+    				Ret.MustDisposePdoDatabase = AuthMustDisposePdoDatabase;
 
 				return Ret;
 			}
