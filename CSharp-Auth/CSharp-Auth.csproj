@@ -13,7 +13,7 @@
 	  <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
 	  <Description>An authentication library based on Delight.IM's PHP-Auth</Description>
 	  <Copyright>(C) Copyright Maximon Ltd., 2024. Distributed under MIT license.</Copyright>
-	  <Version>1.0.19</Version>
+	  <Version>1.0.20</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -49,7 +49,7 @@ namespace Delight.Db
 	}*/
 
 	/** Database access using PHP"s built-in PDO */
-	public sealed class PdoDatabase : Database, IDisposable 
+	public class PdoDatabase : Database, IDisposable 
 	{
 
 		/** @var array|null the old connection attributes to restore during denormalization */
