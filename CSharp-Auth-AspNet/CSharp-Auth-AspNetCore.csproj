@@ -9,7 +9,7 @@
     <Title>CSharp-Auth-AspNetCore</Title>
     <Authors>Maximon Ltd.</Authors>
     <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
-  <version>1.0.3</version>
+  <version>1.0.7</version>
   <Description>Easy shims between CSharp-Auth emulated environment and AspNetCore server environment (specifically, synchronizes the cookies data)</Description></PropertyGroup>
 
   <ItemGroup>
