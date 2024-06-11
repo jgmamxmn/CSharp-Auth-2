@@ -240,7 +240,7 @@ namespace Delight.Auth
 					// Guarantee that PdoInstance exists (required to create PdoDatabase)
 					if (!(PdoInstance is object))
 					{
-						PdoInstance = new PDO(PdoDsn.getDsn(), PdoDsn.getUsername(), PdoDsn.getPassword());
+						PdoInstance = new PdoFromDsn(PdoDsn.getDsn(), PdoDsn.getUsername(), PdoDsn.getPassword());
       						PdoDatabaseMustDisposePdoInstance=true;
 					}
 

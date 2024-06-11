@@ -594,7 +594,7 @@ namespace Delight.Db
 		private void ensureConnected() {
 			if (this.pdo == null) {
 				try {
-					this.pdo = new Shim.PDO(this.dsn.getDsn(), this.dsn.getUsername(), this.dsn.getPassword());
+					this.pdo = new Shim.PdoFromDsn(this.dsn.getDsn(), this.dsn.getUsername(), this.dsn.getPassword());
 				}
 				catch (Exception e) {
 					ErrorHandler.rethrow(e);

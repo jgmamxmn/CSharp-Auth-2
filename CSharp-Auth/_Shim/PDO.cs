@@ -7,12 +7,9 @@ using Npgsql;
 
 namespace Delight.Shim
 {
-	public class PDO : IDisposable
+	public class PdoFromDsn : PDO
 	{
-		public Npgsql.NpgsqlConnection Connection;
-		public Npgsql.NpgsqlDataReader Reader = null;
-
-		public PDO(string dsn, string username, string password)
+		public PdoFromDsn(string dsn, string username, string password) : base()
 		{
 			dsn = dsn.TrimEnd();
 			var dsn2 = new StringBuilder()
@@ -26,8 +23,47 @@ namespace Delight.Shim
 			Connection = new NpgsqlConnection(dsn2.ToString());
 			Connection.Open();
 		}
+		public void Disconnect() =>  Connection.Close();
+		protected override void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					if (Reader is object)
+					{
+						Reader.Close();
+						Reader = null;
+					}
+					if (Connection is object)
+					{
+						Connection.CloseAsync();
+						Connection = null;
+					}
+				}
 
-		public void Disconnect() => Connection.Close();
+				disposedValue = true;
+			}
+		}
+	}
+
+	public class PdoFromNpgsql : PDO
+	{
+		public PdoFromNpgsql(NpgsqlConnection connection) : base()
+		{
+			Connection = connection;
+		}
+		public void Disconnect() { }
+	}
+
+	public abstract class PDO : IDisposable
+	{
+		public Npgsql.NpgsqlConnection Connection;
+		public Npgsql.NpgsqlDataReader Reader = null;
+
+		public PDO()
+		{
+		}
 
 		public enum ATTR_DRIVER_NAME
 		{
@@ -70,7 +106,7 @@ namespace Delight.Shim
 		public bool inTransaction() => (_transaction is object);
 
 		private Dictionary<Db.PdoDatabase.ePDO, object> attribs = new System.Collections.Generic.Dictionary<Db.PdoDatabase.ePDO, object>();
-		private bool disposedValue;
+		protected bool disposedValue;
 
 		public void setAttribute(Db.PdoDatabase.ePDO attr, object val)
 		{
@@ -102,11 +138,6 @@ namespace Delight.Shim
 					{
 						Reader.Close();
 						Reader = null;
-					}
-					if (Connection is object)
-					{
-						Connection.CloseAsync();
-						Connection = null;
 					}
 				}
 

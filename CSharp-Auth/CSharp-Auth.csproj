@@ -13,7 +13,7 @@
 	  <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
 	  <Description>An authentication library based on Delight.IM's PHP-Auth</Description>
 	  <Copyright>(C) Copyright Maximon Ltd., 2024. Distributed under MIT license.</Copyright>
-	  <Version>1.0.21</Version>
+	  <Version>1.0.22</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -25,8 +25,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.2" />
-    <PackageReference Include="Npgsql" Version="6.0.5" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Npgsql" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
