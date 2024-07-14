@@ -33,11 +33,13 @@ namespace Delight.Shim
 					if (Reader is object)
 					{
 						Reader.Close();
+						Reader.DisposeAsync();
 						Reader = null;
 					}
 					if (Connection is object)
 					{
-						Connection.CloseAsync();
+						Connection.Close();
+						Connection.Dispose();
 						Connection = null;
 					}
 				}
@@ -137,6 +139,7 @@ namespace Delight.Shim
 					if(Reader is object)
 					{
 						Reader.Close();
+						Reader.DisposeAsync();
 						Reader = null;
 					}
 				}

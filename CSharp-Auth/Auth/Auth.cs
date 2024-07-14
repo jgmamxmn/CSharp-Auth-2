@@ -241,11 +241,12 @@ namespace Delight.Auth
 					if (!(PdoInstance is object))
 					{
 						PdoInstance = new PdoFromDsn(PdoDsn.getDsn(), PdoDsn.getUsername(), PdoDsn.getPassword());
-      						PdoDatabaseMustDisposePdoInstance=true;
+      					PdoDatabaseMustDisposePdoInstance=true;
 					}
 
 					PdoDatabase = new PdoDatabase(PdoInstance, PdoDsn);
-     					PdoDatabase.MustDisposePdoInstance = PdoDatabaseMustDisposePdoInstance;
+     				PdoDatabase.MustDisposePdoInstance = PdoDatabaseMustDisposePdoInstance;
+					AuthMustDisposePdoDatabase = true;
 				}
 
 				// Php instance
@@ -256,7 +257,7 @@ namespace Delight.Auth
 
 				// Create Auth object
 				var Ret = new Auth(PdoDatabase, Inst, ClientIpAddress, DbTablePrefix, null, null, null);
-    				Ret.MustDisposePdoDatabase = AuthMustDisposePdoDatabase;
+    			Ret.MustDisposePdoDatabase = AuthMustDisposePdoDatabase;
 
 				return Ret;
 			}
