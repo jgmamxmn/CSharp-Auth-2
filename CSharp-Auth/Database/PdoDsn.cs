@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Auth;
+using CSharpAuth.Auth;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 
 	/** DSN for use with PHP"s built-in PDO */

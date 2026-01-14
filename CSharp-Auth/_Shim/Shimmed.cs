@@ -6,14 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using BCrypt.Net;
 
-namespace Delight.Shim
+namespace CSharpAuth.Shim
 {
 	/// <summary>
 	/// Includes various implementations of PHP functions etc.
 	/// </summary>
 	public static class Php
 	{
-		public const string __NAMESPACE__ = "Delight";
+		public const string __NAMESPACE__ = "CSharpAuth";
 		public const int PHP_INT_MAX = int.MaxValue; //~(int)0;
 
 		public enum PASSWORD_ALGO
@@ -431,7 +431,7 @@ namespace Delight.Shim
 			switch (h[0].ToLower())
 			{
 				case "set-cookie":
-					var c = Delight.Cookie.Cookie.parse(this, headerString);
+					var c = CSharpAuth.Cookie.Cookie.parse(this, headerString);
 					_COOKIE.Set(c.getName(), c);
 					break;
 				default:

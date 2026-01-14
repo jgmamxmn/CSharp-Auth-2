@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Delight.Db;
-using Delight.Shim;
+using CSharpAuth.Db;
+using CSharpAuth.Shim;
 
 /*
- * PHP-Auth (https://github.com/delight-im/PHP-Auth)
- * Copyright (c) delight.im (https://www.delight.im/)
+ * Based on PHP-Auth (https://github.com/delight-im/PHP-Auth)
+ * Copyright (c) Delight.im (https://www.delight.im/)
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Delight.Auth 
+namespace CSharpAuth.Auth 
 {
 
 
@@ -234,7 +234,7 @@ namespace Delight.Auth
 		 */
 		protected virtual void onLoginSuccessful(int userId, string email, string username, Status status, Roles roles, int forceLogout, bool remembered) {
 			// re-generate the session ID to prevent session fixation attacks (requests a cookie to be written on the client)
-			Delight.Cookie.Session.regenerate(PhpInstance, true);
+			CSharpAuth.Cookie.Session.regenerate(PhpInstance, true);
 
 			// save the user data in the session variables maintained by this library
 			_SESSION.SESSION_FIELD_LOGGED_IN = true;

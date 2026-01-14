@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>DelightIM_CS_Auth</RootNamespace>
+    <RootNamespace>CSharpAuthIM_CS_Auth</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MxmnKeyFile2.pfx</AssemblyOriginatorKeyFile>
 	  <RepositoryUrl>https://github.com/jgmamxmn/CSharp-Auth-2</RepositoryUrl>
@@ -11,9 +11,9 @@
 	  <Authors>Maximon Ltd.</Authors>
 	  <Company>Maximon Ltd.</Company>
 	  <PackageProjectUrl>https://github.com/jgmamxmn/CSharp-Auth-2</PackageProjectUrl>
-	  <Description>An authentication library based on Delight.IM's PHP-Auth</Description>
+	  <Description>An authentication library based on CSharpAuth.IM's PHP-Auth</Description>
 	  <Copyright>(C) Copyright Maximon Ltd., 2024. Distributed under MIT license.</Copyright>
-	  <Version>1.0.23</Version>
+	  <Version>1.0.26</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

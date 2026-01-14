@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Shim
+namespace CSharpAuth.Shim
 {
 	public class _SESSION : BasicDictionaryWrapped<string, object>
 	{
@@ -36,9 +36,9 @@ namespace Delight.Shim
 		/** @var string session field for the display name (if any) of the user who is currently signed in (if any) */
 		public string SESSION_FIELD_USERNAME { get => (string)this[K_SESSION_FIELD_USERNAME]; set => this[K_SESSION_FIELD_USERNAME] = value; }
 		/** @var string session field for the status of the user who is currently signed in (if any) as one of the const stringants from the {@see Status} class */
-		public Delight.Auth.Status? SESSION_FIELD_STATUS { get => (Delight.Auth.Status?)this[K_SESSION_FIELD_STATUS]; set => this[K_SESSION_FIELD_STATUS] = value; }
+		public CSharpAuth.Auth.Status? SESSION_FIELD_STATUS { get => (CSharpAuth.Auth.Status?)this[K_SESSION_FIELD_STATUS]; set => this[K_SESSION_FIELD_STATUS] = value; }
 		/** @var string session field for the roles of the user who is currently signed in (if any) as a bitmask using const stringants from the {@see Role} class */
-		public Delight.Auth.Roles? SESSION_FIELD_ROLES { get => (Delight.Auth.Roles?)this[K_SESSION_FIELD_ROLES]; set => this[K_SESSION_FIELD_ROLES] = value; }
+		public CSharpAuth.Auth.Roles? SESSION_FIELD_ROLES { get => (CSharpAuth.Auth.Roles?)this[K_SESSION_FIELD_ROLES]; set => this[K_SESSION_FIELD_ROLES] = value; }
 		/** @var string session field for whether the user who is currently signed in (if any) has been remembered (instead of them having authenticated actively) */
 		public bool? SESSION_FIELD_REMEMBERED { get => (bool?)this[K_SESSION_FIELD_REMEMBERED]; set => this[K_SESSION_FIELD_REMEMBERED] = value; }
 		/** @var string session field for the UNIX timestamp in seconds of the session data"s last resynchronization with its authoritative source in the database */

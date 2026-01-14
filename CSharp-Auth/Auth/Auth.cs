@@ -1,27 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Delight.Cookie;
-using Delight.Db;
+using CSharpAuth.Cookie;
+using CSharpAuth.Db;
 using System.Linq;
-using Delight.Shim;
+using CSharpAuth.Shim;
 using System.Threading;
 using System.Net;
 using System.Runtime.CompilerServices;
 
 /*
- * PHP-Auth (https://github.com/delight-im/PHP-Auth)
- * Copyright (c) delight.im (https://www.delight.im/)
+ * Based on PHP-Auth (https://github.com/delight-im/PHP-Auth)
+ * Copyright (c) Delight.im (https://www.delight.im/)
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Delight.Auth
+namespace CSharpAuth.Auth
 {
 
 	/** Component that provides all features and utilities for secure authentication of individual users */
-	sealed public class Auth : UserManager {
+	public class Auth : UserManager {
 
-		public static readonly string[] COOKIE_PREFIXES = new string[] { Delight.Cookie.Cookie.PREFIX_SECURE, Delight.Cookie.Cookie.PREFIX_HOST };
+		public static readonly string[] COOKIE_PREFIXES = new string[] { CSharpAuth.Cookie.Cookie.PREFIX_SECURE, CSharpAuth.Cookie.Cookie.PREFIX_HOST };
 		internal const string COOKIE_CONTENT_SEPARATOR = "~";
 
 		/** @var string the user"s current IP address */
@@ -94,175 +94,10 @@ namespace Delight.Auth
 		/// then, finally, call Build() to build the Auth object
 		/// </summary>
 		/// <returns></returns>
-		public static AuthBuilder Create()
+		public static CSharpAuth.Auth.AuthBuilderSteps.Step1_Database Create()
 		{
-			return new AuthBuilder();
+			return CSharpAuth.Auth.AuthBuilder.Create();
 		}
-		public class AuthBuilder
-		{
-			public delegate Shim._COOKIE DgtCookieFactory(PhpInstance Owner);
-			public delegate Shim._SESSION DgtSessionFactory(PhpInstance Owner);
-			public delegate Shim._SERVER DgtServerFactory(PhpInstance Owner, string ClientIpAddress);
-			private DgtCookieFactory CookieFactory;
-			private DgtSessionFactory SessionFactory;
-			private DgtServerFactory ServerFactory;
-
-			public AuthBuilder()
-			{
-				CookieFactory = (Owner) => new EmulatedCookieMgr();
-				SessionFactory = (Owner) => new _SESSION();
-				ServerFactory = (Owner, ClientIpAddress) => new _SERVER(ClientIpAddress);
-			}
-
-			private PdoDatabase PdoDatabase=null;
-			private PDO PdoInstance = null;
-			private PdoDsn PdoDsn = null;
-			private string DbUsername=null, DbPassword=null, DbHost=null, DbDsn=null, DbDatabase = null, DbTablePrefix = null;
-			private int? DbPort = null;
-			public AuthBuilder SetDatabase(PdoDatabase pdoDatabase)
-			{
-				PdoDatabase = pdoDatabase;
-				return this;
-			}
-			public AuthBuilder SetDatabase(PDO pdoInstance)
-			{
-				PdoInstance = pdoInstance;
-				return this;
-			}
-			public AuthBuilder SetDatabaseParams(PdoDsn dsn)
-			{
-				PdoDsn = dsn;
-				return this;
-			}
-			public AuthBuilder SetDatabaseParams(string Username, string Password)
-			{
-				DbUsername = Username;
-				DbPassword = Password;
-				return this;
-			}
-			public AuthBuilder SetDatabaseParams(string Host, int Port, string Username, string Password)
-			{
-				DbHost = Host;
-				DbPort = Port;
-				DbUsername = Username;
-				DbPassword = Password;
-				return this;
-			}
-			public AuthBuilder SetDatabaseName(string Database)
-			{
-				DbDatabase = Database;
-				return this;
-			}
-			public AuthBuilder SetDatabaseTablePrefix(string TablePrefix)
-			{
-				DbTablePrefix = TablePrefix;
-				return this;
-			}
-			public AuthBuilder SetDatabaseParams(string Dsn, string Username, string Password)
-			{
-				DbDsn = Dsn;
-				DbUsername = Username;
-				DbPassword = Password;
-				return this;
-			}
-
-			public AuthBuilder SetCookieManager(_COOKIE CookieMgr)
-			{
-				CookieFactory = (Owner) => CookieMgr;
-				return this;
-			}
-			public AuthBuilder SetCookieManager(DgtCookieFactory _CookieFactory)
-			{
-				CookieFactory = _CookieFactory;
-				return this;
-			}
-			public AuthBuilder SetSessionManager(_SESSION SessionMgr)
-			{
-				SessionFactory = (Owner) => SessionMgr;
-				return this;
-			}
-			public AuthBuilder SetSessionManager(DgtSessionFactory _SessionFactory)
-			{
-				SessionFactory = _SessionFactory;
-				return this;
-			}
-			public AuthBuilder SetServerManager(_SERVER ServerMgr)
-			{
-				ServerFactory = (Owner, ClientIpAddress) => ServerMgr;
-				return this;
-			}
-			public AuthBuilder SetServerManager(DgtServerFactory _ServerFactory)
-			{
-				ServerFactory = _ServerFactory;
-				return this;
-			}
-
-			private string ClientIpAddress = "0.0.0.0";
-			public AuthBuilder SetClientIp(string _ClientIpAddress)
-			{
-				ClientIpAddress = _ClientIpAddress;
-				return this;
-			}
-			public AuthBuilder SetClientIp(IPAddress _ClientIpAddress)
-			{
-				ClientIpAddress = _ClientIpAddress.ToString();
-				return this;
-			}
-			
-			/// <summary>
-			/// Call this once all options are set. Have you configured: (i) database connection, (ii) database table, (iii) remote IP?
-			/// </summary>
-			/// <returns></returns>
-			public Auth Build()
-			{
-   				bool AuthMustDisposePdoDatabase = false;
-				// Guarantee that PdoDatabase exists
-				if (!(PdoDatabase is object))
-				{
-					// Guarantee that PdoDsn exists (required to create PdoDatabase / PdoInstance)
-					if (!(PdoDsn is object))
-					{
-						Npgsql.NpgsqlConnectionStringBuilder _Dsn;
-						if (!string.IsNullOrEmpty(DbDsn))
-							_Dsn = new Npgsql.NpgsqlConnectionStringBuilder(DbDsn);
-						else
-							_Dsn = new Npgsql.NpgsqlConnectionStringBuilder();
-						if (!string.IsNullOrEmpty(DbHost)) _Dsn.Host = DbHost;
-						if (DbPort is int iDbPort) _Dsn.Port = iDbPort;
-						if (!string.IsNullOrEmpty(DbUsername)) _Dsn.Username = DbUsername;
-						if (!string.IsNullOrEmpty(DbPassword)) _Dsn.Password = DbPassword;
-						if (!string.IsNullOrEmpty(DbDatabase)) _Dsn.Database = DbDatabase;
-
-						PdoDsn = new PdoDsn(_Dsn.ConnectionString, _Dsn.Username, _Dsn.Password);
-					}
-
-					bool PdoDatabaseMustDisposePdoInstance=false;
-					// Guarantee that PdoInstance exists (required to create PdoDatabase)
-					if (!(PdoInstance is object))
-					{
-						PdoInstance = new PdoFromDsn(PdoDsn.getDsn(), PdoDsn.getUsername(), PdoDsn.getPassword());
-      					PdoDatabaseMustDisposePdoInstance=true;
-					}
-
-					PdoDatabase = new PdoDatabase(PdoInstance, PdoDsn);
-     				PdoDatabase.MustDisposePdoInstance = PdoDatabaseMustDisposePdoInstance;
-					AuthMustDisposePdoDatabase = true;
-				}
-
-				// Php instance
-				var Inst = new PhpInstance(null, null, null);
-				Inst._COOKIE = CookieFactory(Inst);
-				Inst._SESSION = SessionFactory(Inst);
-				Inst._SERVER = ServerFactory(Inst, ClientIpAddress);
-
-				// Create Auth object
-				var Ret = new Auth(PdoDatabase, Inst, ClientIpAddress, DbTablePrefix, null, null, null);
-    			Ret.MustDisposePdoDatabase = AuthMustDisposePdoDatabase;
-
-				return Ret;
-			}
-		}
-
 	
 		/*private void DoConstructor(PdoDatabase _databaseConnection, string _clientIpAddress, string _dbTablePrefix = null, bool? _throttling = null,
 			int? _sessionResyncInterval = null, string _dbSchema = null,
@@ -359,19 +194,19 @@ namespace Delight.Auth
 						}
 
 						if (!Php.empty(rememberData)) {
-							if ((Delight.Shim.MasterCaster.GetInt(rememberData["expires"])) >= Php.time()) {
-								if (Php.password_verify(parts[1], Delight.Shim.MasterCaster.GetString(rememberData["token"]))) {
+							if ((CSharpAuth.Shim.MasterCaster.GetInt(rememberData["expires"])) >= Php.time()) {
+								if (Php.password_verify(parts[1], CSharpAuth.Shim.MasterCaster.GetString(rememberData["token"]))) {
 									// the cookie and its contents have now been proven to be valid
 									valid = true;
 
 									this.onLoginSuccessful
 									(
-										Delight.Shim.MasterCaster.GetInt(rememberData["user"]),
-										Delight.Shim.MasterCaster.GetString(rememberData["email"]),
-										Delight.Shim.MasterCaster.GetString(rememberData["username"]), 
-										(Status)Delight.Shim.MasterCaster.GetInt(rememberData["status"]), 
-										(Roles)Delight.Shim.MasterCaster.GetInt(rememberData["roles_mask"]),
-										Delight.Shim.MasterCaster.GetInt(rememberData["force_logout"]),
+										CSharpAuth.Shim.MasterCaster.GetInt(rememberData["user"]),
+										CSharpAuth.Shim.MasterCaster.GetString(rememberData["email"]),
+										CSharpAuth.Shim.MasterCaster.GetString(rememberData["username"]), 
+										(Status)CSharpAuth.Shim.MasterCaster.GetInt(rememberData["status"]), 
+										(Roles)CSharpAuth.Shim.MasterCaster.GetInt(rememberData["roles_mask"]),
+										CSharpAuth.Shim.MasterCaster.GetInt(rememberData["force_logout"]),
 										true
 									);
 								}
@@ -421,17 +256,17 @@ namespace Delight.Auth
 						}
 
 						// if the counter that keeps track of forced logouts has been incremented
-						if ((Delight.Shim.MasterCaster.GetInt(authoritativeData["force_logout"])) > (_SESSION.SESSION_FIELD_FORCE_LOGOUT!)) {
+						if ((CSharpAuth.Shim.MasterCaster.GetInt(authoritativeData["force_logout"])) > (_SESSION.SESSION_FIELD_FORCE_LOGOUT!)) {
 							// the user must be signed out
 							this.logOut();
 						}
 						// if the counter that keeps track of forced logouts has remained unchanged
 						else {
 							// the session data needs to be updated
-							_SESSION.SESSION_FIELD_EMAIL = Delight.Shim.MasterCaster.GetString(authoritativeData["email"]);
-							_SESSION.SESSION_FIELD_USERNAME = Delight.Shim.MasterCaster.GetString(authoritativeData["username"]);
-							_SESSION.SESSION_FIELD_STATUS = (Status)Delight.Shim.MasterCaster.GetInt(authoritativeData["status"]);
-							_SESSION.SESSION_FIELD_ROLES = (Roles)Delight.Shim.MasterCaster.GetInt(authoritativeData["roles_mask"]);
+							_SESSION.SESSION_FIELD_EMAIL = CSharpAuth.Shim.MasterCaster.GetString(authoritativeData["email"]);
+							_SESSION.SESSION_FIELD_USERNAME = CSharpAuth.Shim.MasterCaster.GetString(authoritativeData["username"]);
+							_SESSION.SESSION_FIELD_STATUS = (Status)CSharpAuth.Shim.MasterCaster.GetInt(authoritativeData["status"]);
+							_SESSION.SESSION_FIELD_ROLES = (Roles)CSharpAuth.Shim.MasterCaster.GetInt(authoritativeData["roles_mask"]);
 
 							// remember that we"ve just performed the required resynchronization
 							_SESSION.SESSION_FIELD_LAST_RESYNC = Php.time();
@@ -800,7 +635,7 @@ namespace Delight.Auth
 
 			// save the cookie with the selector and token (requests a cookie to be written on the client)
 			{
-				var cookie = new Delight.Cookie.Cookie(this.rememberCookieName, PhpInstance);
+				var cookie = new CSharpAuth.Cookie.Cookie(this.rememberCookieName, PhpInstance);
 				cookie.setValue(content);
 				cookie.setExpiryTime(expires);
 				cookie.setPath(myParams.path);
@@ -817,7 +652,7 @@ namespace Delight.Auth
 			// if we"ve been deleting the cookie above
 			if (string.IsNullOrEmpty(selector) || string.IsNullOrEmpty(token)) {
 				// attempt to delete a potential old cookie from versions v1.x.x to v6.x.x as well (requests a cookie to be written on the client)
-				var cookie = new Delight.Cookie.Cookie("auth_remember", PhpInstance);
+				var cookie = new CSharpAuth.Cookie.Cookie("auth_remember", PhpInstance);
 				cookie.setPath((!Php.empty(myParams.path)) ? myParams.path : "/");
 				cookie.setDomain(myParams.domain);
 				cookie.setHttpOnly(myParams.httponly);
@@ -858,7 +693,7 @@ namespace Delight.Auth
 			var myParams = PhpInstance.session_get_cookie_params();
 
 			// ask for the session cookie to be deleted (requests a cookie to be written on the client)
-			var cookie = new Delight.Cookie.Cookie(PhpInstance.session_name(), PhpInstance);
+			var cookie = new CSharpAuth.Cookie.Cookie(PhpInstance.session_name(), PhpInstance);
 			cookie.setPath(myParams.path);
 			cookie.setDomain(myParams.domain);
 			cookie.setHttpOnly(myParams.httponly);
@@ -904,8 +739,8 @@ namespace Delight.Auth
 			}
 
 			if (!Php.empty(confirmationData)) {
-				if (Php.password_verify(token, Delight.Shim.MasterCaster.GetString(confirmationData["token"]))) {
-					if (Delight.Shim.MasterCaster.GetInt(confirmationData["expires"]) >= Php.time()) {
+				if (Php.password_verify(token, CSharpAuth.Shim.MasterCaster.GetString(confirmationData["token"]))) {
+					if (CSharpAuth.Shim.MasterCaster.GetInt(confirmationData["expires"]) >= Php.time()) {
 						// invalidate any potential outstanding password reset requests
 						try {
 							this.db.delete(
@@ -939,9 +774,9 @@ namespace Delight.Auth
 						// if the user is currently signed in
 						if (this.isLoggedIn()) {
 							// if the user has just confirmed an email address for their own account
-							if (this.getUserId() == Delight.Shim.MasterCaster.GetInt(confirmationData["user_id"])) {
+							if (this.getUserId() == CSharpAuth.Shim.MasterCaster.GetInt(confirmationData["user_id"])) {
 								// immediately update the email address in the current session as well
-								_SESSION.SESSION_FIELD_EMAIL = Delight.Shim.MasterCaster.GetString(confirmationData["new_email"]);
+								_SESSION.SESSION_FIELD_EMAIL = CSharpAuth.Shim.MasterCaster.GetString(confirmationData["new_email"]);
 							}
 						}
 
@@ -1107,7 +942,7 @@ namespace Delight.Auth
 					throw new DatabaseError(e.Message);
 				}
 
-				if (Delight.Shim.MasterCaster.GetInt(existingUsersWithNewEmail) != 0) {
+				if (CSharpAuth.Shim.MasterCaster.GetInt(existingUsersWithNewEmail) != 0) {
 					throw new UserAlreadyExistsException();
 				}
 
@@ -1124,7 +959,7 @@ namespace Delight.Auth
 				}
 
 				// ensure that at least the current (old) email address has been verified before proceeding
-				if (Delight.Shim.MasterCaster.GetInt(verified) != 1) {
+				if (CSharpAuth.Shim.MasterCaster.GetInt(verified) != 1) {
 					throw new EmailNotVerifiedException();
 				}
 
@@ -1218,12 +1053,12 @@ namespace Delight.Auth
 				throw new ConfirmationRequestNotFound();
 			}
 
-			this.throttle(new[] { "resendConfirmation", "userId", Delight.Shim.MasterCaster.GetString(latestAttempt["user_id"]) }, 1, (60 * 60 * 6));
+			this.throttle(new[] { "resendConfirmation", "userId", CSharpAuth.Shim.MasterCaster.GetString(latestAttempt["user_id"]) }, 1, (60 * 60 * 6));
 			this.throttle(new[] { "resendConfirmation", this.getIpAddress() }, 4, (60 * 60 * 24 * 7), 2);
 
 			this.createConfirmationRequest(
-				Delight.Shim.MasterCaster.GetInt(latestAttempt["user_id"]),
-				Delight.Shim.MasterCaster.GetString(latestAttempt["email"]),
+				CSharpAuth.Shim.MasterCaster.GetInt(latestAttempt["user_id"]),
+				CSharpAuth.Shim.MasterCaster.GetString(latestAttempt["email"]),
 				callback
 			);
 		}
@@ -1548,12 +1383,12 @@ namespace Delight.Auth
 			}
 
 			if (!Php.empty(resetData)) {
-				if (Delight.Shim.MasterCaster.GetInt(resetData["resettable"]) == 1) {
+				if (CSharpAuth.Shim.MasterCaster.GetInt(resetData["resettable"]) == 1) {
 					if (Php.password_verify(token, Shim.MasterCaster.GetString(resetData["token"]))) {
-						if ((Delight.Shim.MasterCaster.GetInt(resetData["expires"])) >= Php.time()) {
+						if ((CSharpAuth.Shim.MasterCaster.GetInt(resetData["expires"])) >= Php.time()) {
 							newPassword = validatePassword(newPassword);
-							this.updatePasswordInternal(Delight.Shim.MasterCaster.GetInt(resetData["user"]), newPassword);
-							this.forceLogoutForUserById(Delight.Shim.MasterCaster.GetInt(resetData["user"]));
+							this.updatePasswordInternal(CSharpAuth.Shim.MasterCaster.GetInt(resetData["user"]), newPassword);
+							this.forceLogoutForUserById(CSharpAuth.Shim.MasterCaster.GetInt(resetData["user"]));
 
 							try {
 								this.db.delete(
@@ -1570,8 +1405,8 @@ namespace Delight.Auth
 
 							return new IdAndEmail
 							{
-								id = Delight.Shim.MasterCaster.GetInt(resetData["user"]),
-								email = Delight.Shim.MasterCaster.GetString(resetData["email"])
+								id = CSharpAuth.Shim.MasterCaster.GetInt(resetData["user"]),
+								email = CSharpAuth.Shim.MasterCaster.GetString(resetData["email"])
 							};
 						}
 					else {
@@ -1763,7 +1598,7 @@ namespace Delight.Auth
 						}
 					);
 
-					return Delight.Shim.MasterCaster.GetInt(enabled) == 1;
+					return CSharpAuth.Shim.MasterCaster.GetInt(enabled) == 1;
 				}
 				catch (Exception e) {
 					throw new DatabaseError(e.Message);
@@ -2068,7 +1903,7 @@ namespace Delight.Auth
 				: (float)capacity);
 			// initialize the last time that the bucket has been refilled (as a Unix timestamp in seconds)
 			bucket["replenished_at"] = (bucket.TryGetValue("replenished_at", out object o_repl_at) 
-				? Delight.Shim.MasterCaster.GetInt(o_repl_at)
+				? CSharpAuth.Shim.MasterCaster.GetInt(o_repl_at)
 				: now);
 
 			// replenish the bucket as appropriate

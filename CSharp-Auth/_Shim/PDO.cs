@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Npgsql;
 
-namespace Delight.Shim
+namespace CSharpAuth.Shim
 {
 	public class PdoFromDsn : PDO
 	{
@@ -216,13 +216,13 @@ namespace Delight.Shim
 			return Command.ExecuteNonQuery();
 		}
 
-		public Delight.Auth.DatabaseResultRow fetch()
+		public CSharpAuth.Auth.DatabaseResultRow fetch()
 		{
 			if(Reader.Read())
 			{
 				var ColumnSchema = Reader.GetColumnSchema();
 
-				var row = new Delight.Auth.DatabaseResultRow();
+				var row = new CSharpAuth.Auth.DatabaseResultRow();
 
 				int colNum = 0;
 				foreach (var colObj in ColumnSchema)
@@ -241,11 +241,11 @@ namespace Delight.Shim
 			}
 		}
 
-		public List<Delight.Auth.DatabaseResultRow> fetchAll()
+		public List<CSharpAuth.Auth.DatabaseResultRow> fetchAll()
 		{
-			var ret = new List<Delight.Auth.DatabaseResultRow>();
+			var ret = new List<CSharpAuth.Auth.DatabaseResultRow>();
 
-			Delight.Auth.DatabaseResultRow row = null;
+			CSharpAuth.Auth.DatabaseResultRow row = null;
 			do
 			{
 				row = fetch();

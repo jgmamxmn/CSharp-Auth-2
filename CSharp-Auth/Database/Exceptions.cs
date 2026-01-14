@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 	public class BeginTransactionFailureException : TransactionFailureException { public BeginTransactionFailureException(string m) : base(m) { } }
 	public class CommitTransactionFailureException : TransactionFailureException { public CommitTransactionFailureException(string m) : base(m) { } }

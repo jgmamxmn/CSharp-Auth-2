@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Auth;
-using Delight.Shim;
+using CSharpAuth.Auth;
+using CSharpAuth.Shim;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 	/** Description of a data source for use with PHP"s built-in PDO */
 	sealed public class PdoDataSource : DataSource {

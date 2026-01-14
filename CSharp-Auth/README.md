@@ -17,14 +17,14 @@ Importantly _*these are per Auth object*_ so session data etc. won't be carried 
 
 ```
 // Establish database connection
-var PDO = new Delight.Shim.PDO("Host=<server IP here>;Database=<database name here>",
+var PDO = new CSharpAuth.Shim.PDO("Host=<server IP here>;Database=<database name here>",
           "<my_postgresql_username>",
           "<my_postgresql_password>");
 
 // Create an Auth-friendly wrapper object
-var DB = new Delight.Db.PdoDatabase(PDO);
+var DB = new CSharpAuth.Db.PdoDatabase(PDO);
 // Create an Auth object
-var Auth = new Delight.Auth.Auth(DB);
+var Auth = new CSharpAuth.Auth.Auth(DB);
       
 // If you want to set any cookies for the Auth session, use the Auth._COOKIE object.
 
@@ -38,11 +38,11 @@ try
         
   // If you want to access any cookies that may have been set by Auth, use the Auth._COOKIE object.
 }
-catch (Delight.Auth.InvalidEmailException)
+catch (CSharpAuth.Auth.InvalidEmailException)
 {
   Console.WriteLine("Bad username/password");
 }
-catch (Delight.Auth.InvalidPasswordException)
+catch (CSharpAuth.Auth.InvalidPasswordException)
 {
   Console.WriteLine("Bad username/password");
 }
@@ -60,7 +60,7 @@ The best approach is to use Auth.AuthBuilder to establish a suitable environment
 
 ```
 
-using Delight.Auth;
+using CSharpAuth.Auth;
 
 Auth auth = Auth.Create()
 	// Database info:
@@ -78,8 +78,8 @@ If you are using an ASP.NET server, you can ease the process by also installing 
 
 ```
 
-using Delight.Auth;
-using Delight.Shim.AspNetCore;
+using CSharpAuth.Auth;
+using CSharpAuth.Shim.AspNetCore;
 
 Auth auth = Auth.Create()
 	// Database info:

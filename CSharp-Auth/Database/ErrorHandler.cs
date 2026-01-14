@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Auth;
-using Delight.Shim;
+using CSharpAuth.Auth;
+using CSharpAuth.Shim;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 	/**
 	 * Handles, processes and re-throws exceptions and errors

@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Delight.Db;
+using CSharpAuth.Db;
 using System.Linq;
-using Delight.Shim;
+using CSharpAuth.Shim;
 
 /*
- * PHP-Auth (https://github.com/delight-im/PHP-Auth)
- * Copyright (c) delight.im (https://www.delight.im/)
+ * Based on PHP-Auth (https://github.com/delight-im/PHP-Auth)
+ * Copyright (c) Delight.im (https://www.delight.im/)
  * Licensed under the MIT License (https://opensource.org/licenses/MIT)
  */
 
-namespace Delight.Auth
+namespace CSharpAuth.Auth
 { 
 
 	/** Component that can be used for administrative tasks by privileged and authorized users */

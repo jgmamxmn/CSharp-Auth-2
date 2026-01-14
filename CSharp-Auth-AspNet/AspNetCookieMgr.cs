@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Delight.Shim.AspNetCore
+namespace CSharpAuth.Shim.AspNetCore
 {
-	public class AspNetCookieMgr : Delight.Shim._COOKIE
+	public class AspNetCookieMgr : CSharpAuth.Shim._COOKIE
 	{
 		private Microsoft.AspNetCore.Http.HttpRequest Request;
 		private Microsoft.AspNetCore.Http.HttpResponse Response;
@@ -33,7 +33,7 @@ namespace Delight.Shim.AspNetCore
 				{
 					foreach (var CReq2 in CReq1.Split(';'))
 					{
-						var CInternal = Delight.Cookie.Cookie.parse(MyPhpInstance, CReq2.Trim());
+						var CInternal = CSharpAuth.Cookie.Cookie.parse(MyPhpInstance, CReq2.Trim());
 						//base[CInternal.getName()] = CInternal;
 						ShadowCopy.Add(CInternal.getName(), CInternal);
 					}

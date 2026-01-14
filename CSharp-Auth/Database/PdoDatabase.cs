@@ -1,21 +1,21 @@
-using Delight.Auth;
-using Delight.Shim;
+using CSharpAuth.Auth;
+using CSharpAuth.Shim;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 	/*use PDO;
 	use PDOException;
 	use PDOStatement;
-	use Delight\Db\Throwable\BeginTransactionFailureException;
-	use Delight\Db\Throwable\CommitTransactionFailureException;
-	use Delight\Db\Throwable\EmptyValueListError;
-	use Delight\Db\Throwable\EmptyWhereClauseError;
-	use Delight\Db\Throwable\RollBackTransactionFailureException;*/
+	use CSharpAuth\Db\Throwable\BeginTransactionFailureException;
+	use CSharpAuth\Db\Throwable\CommitTransactionFailureException;
+	use CSharpAuth\Db\Throwable\EmptyValueListError;
+	use CSharpAuth\Db\Throwable\EmptyWhereClauseError;
+	use CSharpAuth\Db\Throwable\RollBackTransactionFailureException;*/
 
 	public class BindValues : Dictionary<string,object>
 	{

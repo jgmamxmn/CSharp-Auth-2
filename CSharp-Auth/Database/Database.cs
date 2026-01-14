@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Auth;
-using Delight.Shim;
+using CSharpAuth.Auth;
+using CSharpAuth.Shim;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 
-	/*use Delight\Db\Throwable\BeginTransactionFailureException;
-	use Delight\Db\Throwable\CommitTransactionFailureException;
-	use Delight\Db\Throwable\IntegrityConstraintViolationException;
-	use Delight\Db\Throwable\RollBackTransactionFailureException;
-	use Delight\Db\Throwable\TransactionFailureException;*/
+	/*use CSharpAuth\Db\Throwable\BeginTransactionFailureException;
+	use CSharpAuth\Db\Throwable\CommitTransactionFailureException;
+	use CSharpAuth\Db\Throwable\IntegrityConstraintViolationException;
+	use CSharpAuth\Db\Throwable\RollBackTransactionFailureException;
+	use CSharpAuth\Db\Throwable\TransactionFailureException;*/
 
 	/** Safe and convenient SQL database access in a driver-agnostic way */
 	public abstract class Database

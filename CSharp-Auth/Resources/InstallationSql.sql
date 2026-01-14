@@ -1,5 +1,5 @@
--- PHP-Auth (https://github.com/delight-im/PHP-Auth)
--- Copyright (c) delight.im (https://www.delight.im/)
+-- Based on PHP-Auth (https://github.com/delight-im/PHP-Auth)
+-- Copyright (c) Delight.im (https://www.delight.im/)
 -- Licensed under the MIT License (https://opensource.org/licenses/MIT)
 
 BEGIN;

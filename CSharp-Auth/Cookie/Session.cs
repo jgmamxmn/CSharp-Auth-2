@@ -1,11 +1,11 @@
-﻿using Delight.Shim;
+﻿using CSharpAuth.Shim;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Cookie
+namespace CSharpAuth.Cookie
 {
 	public static class Session
 	{
@@ -21,7 +21,7 @@ namespace Delight.Cookie
 		private static void rewriteCookieHeader(PhpInstance shim, string sameSiteRestriction = Cookie.SAME_SITE_RESTRICTION_LAX)
 		{				
 			// get and remove the original cookie header set by PHP
-			var originalCookieHeader = Delight.Http.ResponseHeader.take(shim, "Set-Cookie", shim.session_name() + "=");
+			var originalCookieHeader = CSharpAuth.Http.ResponseHeader.take(shim, "Set-Cookie", shim.session_name() + "=");
 
 			// if a cookie header has been found
 			if (!string.IsNullOrEmpty(originalCookieHeader))

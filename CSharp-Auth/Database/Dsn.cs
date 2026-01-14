@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Auth;
+using CSharpAuth.Auth;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 
 	/** Data source name or connection string describing how to connect to a data source */

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Shim;
+using CSharpAuth.Shim;
 
-namespace Delight
+namespace CSharpAuth
 {
 	/** Utilities for encoding and decoding data using Base64 and variants thereof */
 	public sealed partial class Base64 

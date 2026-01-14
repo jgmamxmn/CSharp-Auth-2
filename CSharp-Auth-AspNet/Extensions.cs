@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Delight.Shim;
-using Delight.Auth;
+using CSharpAuth.Shim;
+using CSharpAuth.Auth;
 using System.Runtime.CompilerServices;
 //using CSharp_Auth_AspNet;
 
-namespace Delight.Shim.AspNetCore
+namespace CSharpAuth.Shim.AspNetCore
 {
 	public static class Extensions
 	{
@@ -20,11 +20,12 @@ namespace Delight.Shim.AspNetCore
 		/// <param name="Ctx"></param>
 		/// <returns></returns>
 		[MethodImpl(MethodImplOptions.NoOptimization)]
-		public static Delight.Auth.Auth.AuthBuilder SetEnvironment(this Delight.Auth.Auth.AuthBuilder AB, Microsoft.AspNetCore.Http.HttpContext Ctx, bool createSession)
+		public static CSharpAuth.Auth.AuthBuilderSteps.Final SetEnvironment(this CSharpAuth.Auth.AuthBuilderSteps.Step2_CookieMgr AB2, 
+			Microsoft.AspNetCore.Http.HttpContext Ctx, bool createSession)
 		{
-			AB.SetCookieManager((_PhpInstance) => new AspNetCookieMgr(_PhpInstance, Ctx));
-			AB.SetClientIp(Ctx.Request.GetRemoteIp());
+			Auth.AuthBuilderSteps.Step3_SessionMgr AB3=AB2.SetCookieManager((_PhpInstance) => new AspNetCookieMgr(_PhpInstance, Ctx));
 
+			Auth.AuthBuilderSteps.Step4_ServerMgr AB4;
 			if (createSession)
 			{
 				var bCookie = Ctx.Request.Cookies.TryGetValue(SessionIdCookieName, out string sessId);
@@ -32,11 +33,11 @@ namespace Delight.Shim.AspNetCore
 				var bSess = (bCookie ? ActiveSessions.TryGetValue(sessId, out outSess) : false);
 				if (bSess)
 				{
-					AB.SetSessionManager(outSess);
+					AB4=AB3.SetSessionManager(outSess);
 				}
 				else
 				{
-					AB.SetSessionManager((_PhpInstance) =>
+					AB4=AB3.SetSessionManager((_PhpInstance) =>
 					{
 						var newSess = new _SESSION();
 						var newSessId = Guid.NewGuid().ToString();
@@ -48,10 +49,18 @@ namespace Delight.Shim.AspNetCore
 					});
 				}
 			}
+			else
+			{
+				AB4 = AB3.UseDefaultSessionManager();
+			}
 
-			return AB;
+			Auth.AuthBuilderSteps.Step5_ClientIP AB5 = AB4.UseDefaultServerManager();
+
+			Auth.AuthBuilderSteps.Final ABF = AB5.SetClientIp(Ctx.Request.GetRemoteIp());
+
+			return ABF;
 		}
-		private static Dictionary<string, Delight.Shim._SESSION> ActiveSessions = new Dictionary<string, Delight.Shim._SESSION>();
+		private static Dictionary<string, CSharpAuth.Shim._SESSION> ActiveSessions = new Dictionary<string, CSharpAuth.Shim._SESSION>();
 		private const string SessionIdCookieName= "CSAuthSessionId";
 
 		public static System.Net.IPAddress GetRemoteIp(this Microsoft.AspNetCore.Http.HttpRequest Request)

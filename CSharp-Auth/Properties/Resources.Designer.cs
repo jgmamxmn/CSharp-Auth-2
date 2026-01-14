@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DelightIM_CS_Auth.Properties {
+namespace CSharpAuthIM_CS_Auth.Properties {
     using System;
     
     
@@ -19,7 +19,7 @@ namespace DelightIM_CS_Auth.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -39,7 +39,7 @@ namespace DelightIM_CS_Auth.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("DelightIM_CS_Auth.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CSharpAuthIM_CS_Auth.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,8 +61,8 @@ namespace DelightIM_CS_Auth.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to -- PHP-Auth (https://github.com/delight-im/PHP-Auth)
-        ///-- Copyright (c) delight.im (https://www.delight.im/)
+        ///   Looks up a localized string similar to -- Based on PHP-Auth (https://github.com/delight-im/PHP-Auth)
+        ///-- Copyright (c) Delight.im (https://www.delight.im/)
         ///-- Licensed under the MIT License (https://opensource.org/licenses/MIT)
         ///
         ///BEGIN;
@@ -73,7 +73,7 @@ namespace DelightIM_CS_Auth.Properties {
         ///	&quot;password&quot; VARCHAR(255) NOT NULL,
         ///	&quot;username&quot; VARCHAR(100) DEFAULT NULL,
         ///	&quot;status&quot; SMALLINT NOT NULL DEFAULT &apos;0&apos; CHECK (&quot;status&quot; &gt;= 0),
-        ///	&quot;verified&quot; SMALLINT NOT NULL DEFAULT &apos;0&apos; CHECK (&quot;verif [rest of string was truncated]&quot;;.
+        ///	&quot;verified&quot; SMALLINT NOT NULL DEFAULT &apos;0&apos; CHEC [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string InstallationSql {
             get {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Shim
+namespace CSharpAuth.Shim
 {
 	public class _SERVER
 	{

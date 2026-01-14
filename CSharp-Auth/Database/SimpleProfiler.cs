@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Delight.Auth;
-using Delight.Shim;
+using CSharpAuth.Auth;
+using CSharpAuth.Shim;
 
-namespace Delight.Db
+namespace CSharpAuth.Db
 {
 	/** Implementation of a profiler that monitors performance of individual database queries and statements */
 	sealed public class SimpleProfiler : Profiler

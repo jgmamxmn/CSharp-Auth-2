@@ -1,4 +1,4 @@
-﻿using Delight.Shim;
+﻿using CSharpAuth.Shim;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Cookie
+namespace CSharpAuth.Cookie
 {
 	/**
 	 * Modern cookie management for PHP
@@ -463,7 +463,7 @@ namespace Delight.Cookie
 		 * Parses the given cookie header and returns an equivalent cookie instance
 		 *
 		 * @param string cookieHeader the cookie header to parse
-		 * @return \Delight\Cookie\Cookie|null the cookie instance or `null`
+		 * @return \CSharpAuth\Cookie\Cookie|null the cookie instance or `null`
 		 */
 		public static Cookie parse(PhpInstance _phpInstance, string cookieHeader)
 		{

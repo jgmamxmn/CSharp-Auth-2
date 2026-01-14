@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Delight.Auth
+namespace CSharpAuth.Auth
 {
 	public class DatabaseResultRow : Dictionary<string,object>
 	{
