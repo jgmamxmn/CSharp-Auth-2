@@ -712,14 +712,18 @@ namespace CSharpAuth.Auth
 		 *
 		 * @param string selector the selector from the selector/token pair
 		 * @param string token the token from the selector/token pair
-		 * @return string[] an array with the old email address (if any) at index zero and the new email address (which has just been verified) at index one
+		 * @return object with the old email address (if any) and the new email address (which has just been verified)
 		 * @throws InvalidSelectorTokenPairException if either the selector or the token was not correct
 		 * @throws TokenExpiredException if the token has already expired
 		 * @throws UserAlreadyExistsException if an attempt has been made to change the email address to a (now) occupied address
 		 * @throws TooManyRequestsException if the number of allowed attempts/requests has been exceeded
 		 * @throws AuthError if an internal problem occurred (do *not* catch)
 		 */
-		public string[] confirmEmail(string selector, string token) {
+		public class confirmEmailResult
+		{
+			public string oldEmailAddress, newEmailAddress;
+		}
+		public confirmEmailResult confirmEmail(string selector, string token) {
 			this.throttle(new[] { "confirmEmail", this.getIpAddress() }, 5, (60 * 60), 10);
 			this.throttle(new[] { "confirmEmail", "selector", selector }, 3, (60 * 60), 10);
 			this.throttle(new[] { "confirmEmail", "token", token }, 3, (60 * 60), 10);
@@ -800,9 +804,10 @@ namespace CSharpAuth.Auth
 							confirmationData["old_email"] = null;
 						}
 
-						return new string[] {
-							Shim.MasterCaster.GetString(confirmationData["old_email"]),
-							Shim.MasterCaster.GetString(confirmationData["new_email"])
+						return new confirmEmailResult
+						{
+							oldEmailAddress= Shim.MasterCaster.GetString(confirmationData["old_email"]),
+							newEmailAddress = Shim.MasterCaster.GetString(confirmationData["new_email"])
 						};
 					}
 					else {
@@ -835,15 +840,15 @@ namespace CSharpAuth.Auth
 		 * @throws TooManyRequestsException if the number of allowed attempts/requests has been exceeded
 		 * @throws AuthError if an internal problem occurred (do *not* catch)
 		 */
-		public string[] confirmEmailAndSignIn(string selector, string token, int? rememberDuration = null) {
+		public confirmEmailResult confirmEmailAndSignIn(string selector, string token, int? rememberDuration = null) {
 			var emailBeforeAndAfter = this.confirmEmail(selector, token);
 
 			if (!this.isLoggedIn()) {
-				if ((emailBeforeAndAfter?.Length ?? 0)>1) {
-					emailBeforeAndAfter[1] = validateEmailAddress(emailBeforeAndAfter[1]);
+				if (emailBeforeAndAfter is object) {
+					emailBeforeAndAfter.newEmailAddress = validateEmailAddress(emailBeforeAndAfter.newEmailAddress);
 
 					var userData = this.getUserDataByEmailAddress(
-						emailBeforeAndAfter[1],
+						emailBeforeAndAfter.newEmailAddress,
 						new string[] { "id", "email", "username", "status", "roles_mask", "force_logout" }
 					);
 
@@ -1349,7 +1354,7 @@ namespace CSharpAuth.Auth
 		 * @param string selector the selector from the selector/token pair
 		 * @param string token the token from the selector/token pair
 		 * @param string newPassword the new password to set for the account
-		 * @return string[] an array with the user"s ID at index `id` and the user"s email address at index `email`
+		 * @return object with the user"s ID at field `id` and the user"s email address at field `email`
 		 * @throws InvalidSelectorTokenPairException if either the selector or the token was not correct
 		 * @throws TokenExpiredException if the token has already expired
 		 * @throws ResetDisabledException if the user has explicitly disabled password resets for their account
@@ -1437,7 +1442,7 @@ namespace CSharpAuth.Auth
 		 * @param string token the token from the selector/token pair
 		 * @param string newPassword the new password to set for the account
 		 * @param int|null rememberDuration (optional) the duration in seconds to keep the user logged in ("remember me"), e.g. `60 * 60 * 24 * 365.25` for one year
-		 * @return string[] an array with the user"s ID at index `id` and the user"s email address at index `email`
+		 * @return object with the user"s ID at field `id` and the user"s email address at field `email`
 		 * @throws InvalidSelectorTokenPairException if either the selector or the token was not correct
 		 * @throws TokenExpiredException if the token has already expired
 		 * @throws ResetDisabledException if the user has explicitly disabled password resets for their account

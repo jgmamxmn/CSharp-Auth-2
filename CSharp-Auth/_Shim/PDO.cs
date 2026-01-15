@@ -198,22 +198,46 @@ namespace CSharpAuth.Shim
 		}
 		public void executeReader(Dictionary<string,object> queryParams)
 		{
-			_ensureFree();
-			_prepParams(queryParams);
-			Reader = Command.ExecuteReader();
-			PDO.Reader = Reader;
+			try
+			{
+				_ensureFree();
+				_prepParams(queryParams);
+				Reader = Command.ExecuteReader();
+				PDO.Reader = Reader;
+			}
+			catch(PostgresException pge)
+			{
+				var toThrow = new PdoException(pge, PDO);
+				throw toThrow;
+			}
 		}
 		public object executeScalar(Dictionary<string, object> queryParams)
 		{
-			_ensureFree();
-			_prepParams(queryParams);
-			return Command.ExecuteScalar();
+			try
+			{
+				_ensureFree();
+				_prepParams(queryParams);
+				return Command.ExecuteScalar();
+			}
+			catch(PostgresException pge)
+			{
+				var toThrow = new PdoException(pge, PDO);
+				throw toThrow;
+			}
 		}
 		public int executeNonQuery(Dictionary<string,object> queryParams)
 		{
-			_ensureFree();
-			_prepParams(queryParams);
-			return Command.ExecuteNonQuery();
+			try
+			{
+				_ensureFree();
+				_prepParams(queryParams);
+				return Command.ExecuteNonQuery();
+			}
+			catch(PostgresException pge)
+			{
+				var toThrow = new PdoException(pge, PDO);
+				throw toThrow;
+			}
 		}
 
 		public CSharpAuth.Auth.DatabaseResultRow fetch()

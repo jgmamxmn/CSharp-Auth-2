@@ -57,6 +57,7 @@ namespace CSharpAuth.Auth
 		{
 			DbUsername = Username;
 			DbPassword = Password;
+			DbDatabase = DatabaseName;
 			DbHost = Host;
 			DbPort = Port;
 			return this;
